@@ -1,0 +1,13 @@
+out/
+
+fpga/*/*
+!fpga/*/Makefile
+!fpga/*/*.qsf
+!fpga/*/*.qpf
+
+tb/*/*
+!tb/*/*.mpf
+!tb/*/*.v
+!tb/*/*.sv
+
+transcript
