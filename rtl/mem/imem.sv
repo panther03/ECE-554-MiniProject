@@ -1,6 +1,6 @@
 module imem (clk, addr, inst);
 
-   `include mem_defs.vh
+   `include "mem_defs.vh"
 
    input                   clk;
    input  [IMEM_DEPTH-1:0] addr;
