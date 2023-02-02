@@ -1,93 +1,52 @@
-module alu(clk,src0,src1,shamt,func,dst,dst_EX_DM,ov,zr,neg);
-///////////////////////////////////////////////////////////
-// ALU.  Performs ADD, SUB, AND, NOR, SLL, SRL, or SRA  //
-// based on func input.  Provides OV and ZR outputs.   //
-// Arithmetic is saturating.                          //
-///////////////////////////////////////////////////////
-// Encoding of func[2:0] is as follows: //
-// 000 ==> ADD
-// 001 ==> SUB
-// 010 ==> AND
-// 011 ==> NOR
-// 100 ==> SLL
-// 101 ==> SRL
-// 110 ==> SRA
-// 111 ==> reserved
+module alu (A, B, Op, Out, alu_err);
+   
+   input [15:0] A;
+   input [15:0] B;
+   input [3:0] Op;
+   output reg [15:0] Out;
+   output reg alu_err;
 
-//////////////////////
-// include defines //
-////////////////////
-`include "common_params.vh"
+   wire [15:0] S, shft;
+   wire Cout;
 
-input clk;
-input [15:0] src0,src1;
-input [2:0] func;			// selects function to perform
-input [3:0] shamt;			// shift amount
+   // Inversion logic for adder operand (used for subtract)
 
-output [15:0] dst;			// ID_EX version for branch/jump targets
-output reg [15:0] dst_EX_DM;
-output ov,zr,neg;
+   wire [15:0] A_inv;
+   wire inv_A;
 
-wire [15:0] sum;		// output of adder
-wire [15:0] sum_sat;	// saturated sum
-wire [15:0] src0_2s_cmp;
-wire cin;
-wire [15:0] shft_l1,shft_l2,shft_l4,shft_l;		// intermediates for shift left
-wire [15:0] shft_r1,shft_r2,shft_r4,shft_r;		// intermediates for shift right
+   assign inv_A = Op[3]&Op[2];
+   assign A_inv = A ^ {16{inv_A}};
 
-/////////////////////////////////////////////////
-// Implement 2s complement logic for subtract //
-///////////////////////////////////////////////
-assign src0_2s_cmp = (func==SUB) ? ~src0 : src0;	// use 2's comp for sub
-assign cin = (func==SUB) ? 1 : 0;					// which is invert and add 1
-//////////////////////
-// Implement adder //
-////////////////////
-assign sum = src1 + src0_2s_cmp + cin;
-///////////////////////////////
-// Now for saturation logic //
-/////////////////////////////
-assign sat_neg = (src1[15] && src0_2s_cmp[15] && ~sum[15]) ? 1 : 0;
-assign sat_pos = (~src1[15] && !src0_2s_cmp[15] && sum[15]) ? 1 : 0;
-assign sum_sat = (sat_pos) ? 16'h7fff :
-                 (sat_neg) ? 16'h8000 :
-				 sum;
-				 
-assign ov = sat_pos | sat_neg;
-				 
-///////////////////////////
-// Now for left shifter //
-/////////////////////////
-assign shft_l1 = (shamt[0]) ? {src1[14:0],1'b0} : src1;
-assign shft_l2 = (shamt[1]) ? {shft_l1[13:0],2'b00} : shft_l1;
-assign shft_l4 = (shamt[2]) ? {shft_l2[11:0],4'h0} : shft_l2;
-assign shft_l = (shamt[3]) ? {shft_l4[7:0],8'h00} : shft_l4;
 
-////////////////////////////
-// Now for right shifter //
-//////////////////////////
-assign shft_in = (func==SRA) ? src1[15] : 0;
-assign shft_r1 = (shamt[0]) ? {shft_in,src1[15:1]} : src1;
-assign shft_r2 = (shamt[1]) ? {{2{shft_in}},shft_r1[15:2]} : shft_r1;
-assign shft_r4 = (shamt[2]) ? {{4{shft_in}},shft_r2[15:4]} : shft_r2;
-assign shft_r = (shamt[3]) ? {{8{shft_in}},shft_r4[15:8]} : shft_r4;
+   cla16 iCLA16(.A(A_inv),.B(B),.Cin(inv_A),.Cout(Cout),.S(S));
 
-///////////////////////////////////////////
-// Now for multiplexing function of ALU //
-/////////////////////////////////////////
-assign dst = (func==AND) ? src1 & src0 :
-			 (func==NOR) ? ~(src1 | src0) :
-			 (func==SLL) ? shft_l :
-			 ((func==SRL) || (func==SRA)) ? shft_r :
-			 (func==LHB) ? {src1[7:0],src0[7:0]} : sum_sat;	 
-			 
-assign zr = ~|dst;
-assign neg = dst[15];
+   shifter iSHFT(.In(A),.Cnt(B[3:0]),.Op(Op[1:0]),.Out(shft));
 
-//////////////////////////
-// Flop the ALU result //
-////////////////////////
-always @(posedge clk)
-  dst_EX_DM <= dst;
+   wire SEQ, SLE, SLT;
+   wire Ofl;
 
+   assign Ofl = (S[15] & ~A_inv[15] & ~B[15]) | (~S[15] & A_inv[15] & B[15]);
+
+   assign SEQ = ~|S;
+   assign SLT = SLE & ~SEQ; 
+   assign SLE = (~S[15] ^ Ofl);  
+
+   always @* casex (Op)
+      4'b0000 : begin alu_err = 1'b0; Out = S; end
+      4'b0001 : begin alu_err = 1'b0; Out = Cout; end
+      4'b0010 : begin alu_err = 1'b0; Out = A ^ B; end
+      4'b0011 : begin alu_err = 1'b0; Out = A & ~B; end
+      4'b01?? : begin alu_err = 1'b0; Out = shft; end
+      4'b1000 : begin alu_err = 1'b0; Out = {A[0],A[1],A[2],A[3],A[4],A[5],A[6],A[7],A[8],A[9],A[10],A[11],A[12],A[13],A[14],A[15]}; end
+      4'b1001 : begin alu_err = 1'b0; Out = A; end
+      4'b1010 : begin alu_err = 1'b0; Out = B; end
+      4'b1011 : begin alu_err = 1'b0; Out = (A << 8) | B; end
+      4'b1100 : begin alu_err = 1'b0; Out = SEQ; end
+      4'b1101 : begin alu_err = 1'b0; Out = SLT; end
+      4'b1110 : begin alu_err = 1'b0; Out = SLE; end
+      4'b1111 : begin alu_err = 1'b0; Out = S; end
+      default: begin  alu_err = 1'b1; Out = 15'hx; end
+   endcase
+
+    
 endmodule

@@ -1,4 +1,4 @@
-ASM_PROG ?= "BasicOpCodes1.asm"
+ASM_PROG ?= "" # TODO: add a default demo
 FPGA_DEV ?= "de1_soc"
 
 FW_DIR = "fw/"
@@ -13,7 +13,7 @@ $(OUT_DIR):
 	@mkdir -p $(OUT_DIR)
 
 fw: $(OUT_DIR)
-	@perl $(SW_DIR)/asmbl.pl $(FW_DIR)/$(ASM_PROG) > $(OUT_DIR)/out.hex
+	@python3 $(SW_DIR)/assemble.py $(FW_DIR)/$(ASM_PROG) -o $(OUT_DIR)/out.hex
 
 fpga: $(OUT_DIR) fw
 	@make -C $(FPGA_DIR)/$(FPGA_DEV)
