@@ -6,7 +6,6 @@ fpga/*/*
 !fpga/*/*.qpf
 
 tb/*/*
-!tb/*/*.mpf
 !tb/*/*.v
 !tb/*/*.sv
 
