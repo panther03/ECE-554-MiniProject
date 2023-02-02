@@ -2,16 +2,34 @@
 /* $LastChangedDate: 2009-03-04 23:09:45 -0600 (Wed, 04 Mar 2009) $ */
 /* $Rev: 45 $ */
 module proc (/*AUTOARG*/
-   // Outputs
+   // Error signal
    err, 
-   // Inputs
-   clk, rst
+   // Clock and reset
+   clk, rst_n,
+   // Instruction memory signals
+   iaddr, inst,
+   // Data memory signals
+   daddr, wr, en, data_in, data_out
    );
 
-   input clk;
-   input rst;
-
    output err;
+
+   input clk;
+   input rst_n;
+
+   // these addresses are 16-bit despite the physical memory
+   // they are going to not being that large
+   // this is to allow for MMIO
+   output [15:0] iaddr;
+   input [15:0] inst;
+
+   output [15:0] daddr;
+   output wr;
+   output en;
+   output [15:0] data_in;
+   input  [15:0] data_out;
+
+
 
    // None of the above lines can be modified
 
@@ -21,9 +39,124 @@ module proc (/*AUTOARG*/
    // As desribed in the homeworks, use the err signal to trap corner
    // cases that you think are illegal in your statemachines
 
-   // Wire declarations are in another file.
-   // See description there for more details.
-   `include "proc_wires.v.0"
+   ////////////////////////
+   // fetch block wires //
+   //////////////////////
+   wire [15:0] pc_inc;
+   wire stall, flush;
+   wire fetch_err;
+
+   /////////////////////////////
+   // IF_ID transition wires //
+   ///////////////////////////
+
+   wire [15:0] IF_ID_pc_inc_in, IF_ID_pc_inc_out;
+   wire [15:0] IF_ID_inst_in, IF_ID_inst_out_temp, IF_ID_inst_out;
+
+   //////////////////////////
+   // control block wires //
+   ////////////////////////
+
+   wire [6:0] op_word;
+   wire ctrl_err;
+
+   wire [3:0] AluOp;
+   wire [1:0] InstFmt, JType, CondOp;
+   wire RegWrite, MemWrite, MemRead,
+        MemToReg, AluSrc, XtendSel,
+        Exc, Rtn, Halt;
+
+   /////////////////////////
+   // decode block wires //
+   ///////////////////////
+
+   wire [15:0] reg1, reg2, imm, ofs;
+   wire bypass_reg1, bypass_reg2;
+   wire decode_err;
+
+   /////////////////////////////
+   // ID_EX transition wires //
+   ///////////////////////////
+
+   wire ID_EX_ctrl_RegWrite_in, ID_EX_ctrl_RegWrite_out;
+   wire ID_EX_ctrl_MemWrite_in, ID_EX_ctrl_MemWrite_out;
+   wire ID_EX_ctrl_MemRead_in, ID_EX_ctrl_MemRead_out;
+   wire ID_EX_ctrl_MemToReg_in, ID_EX_ctrl_MemToReg_out;
+   wire ID_EX_ctrl_AluSrc_in, ID_EX_ctrl_AluSrc_out;
+   wire [1:0] ID_EX_ctrl_InstFmt_in, ID_EX_ctrl_InstFmt_out;
+   wire [1:0] ID_EX_ctrl_CondOp_in, ID_EX_ctrl_CondOp_out;
+   wire [1:0] ID_EX_ctrl_JType_in, ID_EX_ctrl_JType_out;
+   wire [3:0] ID_EX_ctrl_AluOp_in, ID_EX_ctrl_AluOp_out;
+
+   wire ID_EX_ctrl_Halt_in, ID_EX_ctrl_Halt_out;
+   wire ID_EX_ctrl_Exc_in, ID_EX_ctrl_Exc_out;
+
+   wire [15:0] ID_EX_reg1_in, ID_EX_reg1_out;
+   wire [15:0] ID_EX_reg2_in, ID_EX_reg2_out;
+   wire [15:0] ID_EX_ofs_in, ID_EX_ofs_out;
+   wire [15:0] ID_EX_imm_in, ID_EX_imm_out;
+
+   wire [15:0] ID_EX_pc_inc_in, ID_EX_pc_inc_out;
+   wire [15:0] ID_EX_inst_in, ID_EX_inst_out;
+
+   //////////////////////////
+   // execute block wires //
+   ////////////////////////
+
+   wire [15:0] alu_out;
+   wire [15:0] reg1_frwrd, reg2_frwrd;
+   reg [2:0] writesel;
+   wire ex_err;
+
+   //////////////////////////////
+   // EX_MEM transition wires //
+   ////////////////////////////
+
+   wire EX_MEM_ctrl_RegWrite_in, EX_MEM_ctrl_RegWrite_out;
+   wire EX_MEM_ctrl_MemWrite_in, EX_MEM_ctrl_MemWrite_out;
+   wire EX_MEM_ctrl_MemRead_in, EX_MEM_ctrl_MemRead_out;
+   wire EX_MEM_ctrl_MemToReg_in, EX_MEM_ctrl_MemToReg_out;
+
+   wire EX_MEM_ctrl_Halt_in, EX_MEM_ctrl_Halt_out;
+   wire EX_MEM_ctrl_Exc_in, EX_MEM_ctrl_Exc_out;
+
+   wire [15:0] EX_MEM_alu_out_in,  EX_MEM_alu_out_out;
+   wire [15:0] EX_MEM_reg2_in, EX_MEM_reg2_out;
+   wire [2:0] EX_MEM_writesel_in, EX_MEM_writesel_out;
+
+   /////////////////////////
+   // memory block wires //
+   ///////////////////////
+
+   wire [15:0] mem_out;
+
+   //////////////////////////////
+   // MEM_WB transition wires //
+   ////////////////////////////
+
+   wire MEM_WB_ctrl_RegWrite_in, MEM_WB_ctrl_RegWrite_out;
+   wire MEM_WB_ctrl_MemToReg_in, MEM_WB_ctrl_MemToReg_out;
+
+   wire MEM_WB_ctrl_Halt_in, MEM_WB_ctrl_Halt_out;
+   wire MEM_WB_ctrl_Exc_in, MEM_WB_ctrl_Exc_out;
+
+   wire [2:0] MEM_WB_writesel_in, MEM_WB_writesel_out;
+   wire [15:0] MEM_WB_alu_out_in, MEM_WB_alu_out_out;
+   wire [15:0] MEM_WB_mem_out_in, MEM_WB_mem_out_out;
+
+   ////////////////////////////
+   // writeback block wires //
+   //////////////////////////
+
+   wire [15:0] write_in;
+
+   ////////////////////////////
+   // forwarding unit wires //
+   //////////////////////////
+
+   wire frwrd_MEM_EX_opA, frwrd_MEM_EX_opB;
+   wire frwrd_WB_EX_opA, frwrd_WB_EX_opB;
+   wire frwrd_EX_ID_opA;
 
    //////////////////
    // fetch block //
@@ -37,10 +170,10 @@ module proc (/*AUTOARG*/
    // halt from all stages is passed to stop PC increment,
    // but the testbench should only see Halt from MEM_WB.
    wire all_halts = Halt | ID_EX_ctrl_Halt_out | EX_MEM_ctrl_Halt_out | MEM_WB_ctrl_Halt_out;
-   
-   fetch iFETCH(.clk(clk), .rst(rst), .fetch_err(fetch_err), 
+
+   fetch iFETCH(.clk(clk), .rst_n(rst_n), .fetch_err(fetch_err), 
       .inst(inst), .stall(stall), .flush(flush), .JType(JType), .CondOp(CondOp),
-      .pc_inc_out(pc_inc), .pc_inc_in(IF_ID_pc_inc_out), .reg1(reg1_frwrd_fetch),
+      .iaddr(iaddr), .pc_inc_out(pc_inc), .pc_inc_in(IF_ID_pc_inc_out), .reg1(reg1_frwrd_fetch),
       .Halt(all_halts), .Rtn(Rtn), .Exc(Exc), .ofs(ofs), .imm(imm));
    
    ///////////////////////
@@ -56,7 +189,7 @@ module proc (/*AUTOARG*/
    wire [31:0] IF_ID_reg_in = (all_halts | stall) ? {IF_ID_pc_inc_out,IF_ID_inst_out_temp}
                             : (flush ? {IF_ID_pc_inc_out,16'h0} : {IF_ID_pc_inc_in, IF_ID_inst_in});
 
-   dff IF_ID_reg [31:0] (.clk(clk), .rst(rst),
+   dff IF_ID_reg [31:0] (.clk(clk), .rst_n(rst_n),
       .d(IF_ID_reg_in), .q({IF_ID_pc_inc_out,IF_ID_inst_out_temp}));
 
    // Since we flipped at input, flip at output as well.
@@ -80,7 +213,7 @@ module proc (/*AUTOARG*/
    // decode block //
    /////////////////
 
-   decode iDECODE(.clk(clk), .rst(rst), .decode_err(decode_err),
+   decode iDECODE(.clk(clk), .rst_n(rst_n), .decode_err(decode_err),
       .inst(IF_ID_inst_out), .writesel(MEM_WB_writesel_out),
       .bypass_reg1(bypass_reg1), .bypass_reg2(bypass_reg2),
       .write_in(write_in), .reg1(reg1), .reg2(reg2), .imm(imm), .ofs(ofs),
@@ -115,7 +248,7 @@ module proc (/*AUTOARG*/
    assign ID_EX_inst_in = stall ? 0 : IF_ID_inst_out;
    assign ID_EX_pc_inc_in = IF_ID_pc_inc_out;
 
-   dff ID_EX_reg [112:0] (.clk(clk), .rst(rst),
+   dff ID_EX_reg [112:0] (.clk(clk), .rst_n(rst_n),
       .d({ID_EX_ctrl_RegWrite_in, ID_EX_ctrl_MemWrite_in, ID_EX_ctrl_MemRead_in, ID_EX_ctrl_MemToReg_in, ID_EX_ctrl_AluSrc_in, ID_EX_ctrl_InstFmt_in, ID_EX_ctrl_CondOp_in, ID_EX_ctrl_JType_in, ID_EX_ctrl_AluOp_in, ID_EX_reg1_in, ID_EX_reg2_in, ID_EX_ofs_in, ID_EX_imm_in, ID_EX_pc_inc_in, ID_EX_inst_in, ID_EX_ctrl_Halt_in, ID_EX_ctrl_Exc_in}),
       .q({ID_EX_ctrl_RegWrite_out, ID_EX_ctrl_MemWrite_out, ID_EX_ctrl_MemRead_out, ID_EX_ctrl_MemToReg_out, ID_EX_ctrl_AluSrc_out, ID_EX_ctrl_InstFmt_out, ID_EX_ctrl_CondOp_out, ID_EX_ctrl_JType_out, ID_EX_ctrl_AluOp_out, ID_EX_reg1_out, ID_EX_reg2_out, ID_EX_ofs_out, ID_EX_imm_out, ID_EX_pc_inc_out, ID_EX_inst_out, ID_EX_ctrl_Halt_out, ID_EX_ctrl_Exc_out}));
 
@@ -155,7 +288,7 @@ module proc (/*AUTOARG*/
    assign EX_MEM_reg2_in = reg2_frwrd;
    assign EX_MEM_writesel_in = writesel;
 
-   dff EX_MEM_reg [40:0] (.clk(clk), .rst(rst),
+   dff EX_MEM_reg [40:0] (.clk(clk), .rst_n(rst_n),
       .d({EX_MEM_ctrl_RegWrite_in, EX_MEM_ctrl_MemWrite_in, EX_MEM_ctrl_MemRead_in, EX_MEM_ctrl_MemToReg_in, EX_MEM_alu_out_in, EX_MEM_reg2_in, EX_MEM_writesel_in, EX_MEM_ctrl_Halt_in, EX_MEM_ctrl_Exc_in}),
       .q({EX_MEM_ctrl_RegWrite_out, EX_MEM_ctrl_MemWrite_out, EX_MEM_ctrl_MemRead_out, EX_MEM_ctrl_MemToReg_out, EX_MEM_alu_out_out, EX_MEM_reg2_out, EX_MEM_writesel_out, EX_MEM_ctrl_Halt_out, EX_MEM_ctrl_Exc_out}));
 
@@ -163,10 +296,13 @@ module proc (/*AUTOARG*/
    // memory block //
    /////////////////
 
-   memory2c iMEM (.clk(clk), .rst(rst), .createdump(1'b0), 
-      .data_out(mem_out), .data_in(EX_MEM_reg2_out),
-      .addr(EX_MEM_alu_out_out), .wr(EX_MEM_ctrl_MemWrite_out),
-      .enable(EX_MEM_ctrl_MemRead_out | EX_MEM_ctrl_MemWrite_out));      
+   // this has been moved outside of proc.v!
+
+   assign daddr = EX_MEM_alu_out_out;
+   assign mem_out = data_out;
+   assign data_in = EX_MEM_reg2_out;
+   assign en = EX_MEM_ctrl_MemRead_out | EX_MEM_ctrl_MemWrite_out;
+   assign wr = EX_MEM_ctrl_MemWrite_out;
 
    ////////////////////////
    // MEM/WB transition //
@@ -181,7 +317,7 @@ module proc (/*AUTOARG*/
    assign MEM_WB_mem_out_in = mem_out;
    assign MEM_WB_writesel_in = EX_MEM_writesel_out;
 
-   dff MEM_WB_reg [38:0] (.clk(clk),.rst(rst), 
+   dff MEM_WB_reg [38:0] (.clk(clk),.rst_n(rst_n), 
       .d({MEM_WB_ctrl_RegWrite_in, MEM_WB_ctrl_MemToReg_in, MEM_WB_ctrl_Halt_in, MEM_WB_ctrl_Exc_in, MEM_WB_writesel_in, MEM_WB_alu_out_in, MEM_WB_mem_out_in}),
       .q({MEM_WB_ctrl_RegWrite_out, MEM_WB_ctrl_MemToReg_out, MEM_WB_ctrl_Halt_out, MEM_WB_ctrl_Exc_out, MEM_WB_writesel_out, MEM_WB_alu_out_out, MEM_WB_mem_out_out}));
 
@@ -214,6 +350,8 @@ module proc (/*AUTOARG*/
 
    // error handling
    assign err = ex_err | ctrl_err | fetch_err | decode_err;
+
+   // Memory signals
 
 
 endmodule // proc

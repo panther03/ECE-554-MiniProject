@@ -1,9 +1,9 @@
 module decode (inst, write_in, reg1, reg2, imm, ofs,
                InstFmt, JType, XtendSel, RegWrite,
                bypass_reg1, bypass_reg2, writesel,
-               decode_err, clk, rst);
+               decode_err, clk, rst_n);
 
-    input clk, rst;
+    input clk, rst_n;
 
     input [15:0] inst, write_in;
     input [2:0] writesel;
@@ -28,7 +28,7 @@ module decode (inst, write_in, reg1, reg2, imm, ofs,
     assign reg1sel = inst[10:8];
     assign reg2sel = inst[7:5];
 
-    rf iRF (.clk(clk),.rst(rst),.write(RegWrite),.err(decode_err),
+    rf iRF (.clk(clk),.rst_n(rst_n),.write(RegWrite),.err(decode_err),
             .read1regsel(reg1sel),.read2regsel(reg2sel),.writeregsel(writesel),
             .read1data(reg1raw),.read2data(reg2raw),.writedata(write_in));
 

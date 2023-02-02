@@ -3,20 +3,19 @@
 /* $Rev: 45 $ */
 // D-flipflop
 
-module dff (q, d, clk, rst);
+module dff (q, d, clk, rst_n);
 
-    output         q;
+    output reg        q;
     input          d;
     input          clk;
-    input          rst;
+    input          rst_n;
 
-    reg            state;
-
-    assign #(1) q = state;
-
-    always @(posedge clk) begin
-      state = rst? 0 : d;
-    end
+    always @(posedge clk, negedge rst_n)
+      if (!rst_n)
+        q <= 0;
+      else
+        q <= d;
+      
 
 endmodule
 // DUMMY LINE FOR REV CONTROL :0:

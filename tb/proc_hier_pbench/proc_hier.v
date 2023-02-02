@@ -7,14 +7,14 @@ module proc_hier();
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire                 clk;                    // From c0 of clkrst.v
+   wire                 clk;                    // From c0 of clkrst_n.v
    wire                 err;                    // From p0 of proc.v
-   wire                 rst;                    // From c0 of clkrst.v
+   wire                 rst_n;                    // From c0 of clkrst_n.v
    // End of automatics
-   clkrst c0(/*AUTOINST*/
+   clkrst_n c0(/*AUTOINST*/
              // Outputs
              .clk                       (clk),
-             .rst                       (rst),
+             .rst_n                       (rst_n),
              // Inputs
              .err                       (err));
    
@@ -23,7 +23,7 @@ module proc_hier();
            .err                         (err),
            // Inputs
            .clk                         (clk),
-           .rst                         (rst));   
+           .rst_n                         (rst_n));   
    
 
 endmodule

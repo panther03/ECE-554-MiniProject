@@ -5,9 +5,9 @@ module rf (
            // Outputs
            read1data, read2data, err,
            // Inputs
-           clk, rst, read1regsel, read2regsel, writeregsel, writedata, write
+           clk, rst_n, read1regsel, read2regsel, writeregsel, writedata, write
            );
-   input clk, rst;
+   input clk, rst_n;
    input [2:0] read1regsel;
    input [2:0] read2regsel;
    input [2:0] writeregsel;
@@ -29,14 +29,14 @@ module rf (
 
    decoder3t8 iDEC (.adr(writeregsel),.sel_bits(write_sel));
 
-   reg16 iREG0 (.q(reg0out),.d(reg0in),.clk(clk),.en(write_sel[0] & write),.rst(rst));
-   reg16 iREG1 (.q(reg1out),.d(reg1in),.clk(clk),.en(write_sel[1] & write),.rst(rst));
-   reg16 iREG2 (.q(reg2out),.d(reg2in),.clk(clk),.en(write_sel[2] & write),.rst(rst));
-   reg16 iREG3 (.q(reg3out),.d(reg3in),.clk(clk),.en(write_sel[3] & write),.rst(rst));
-   reg16 iREG4 (.q(reg4out),.d(reg4in),.clk(clk),.en(write_sel[4] & write),.rst(rst));
-   reg16 iREG5 (.q(reg5out),.d(reg5in),.clk(clk),.en(write_sel[5] & write),.rst(rst));
-   reg16 iREG6 (.q(reg6out),.d(reg6in),.clk(clk),.en(write_sel[6] & write),.rst(rst));
-   reg16 iREG7 (.q(reg7out),.d(reg7in),.clk(clk),.en(write_sel[7] & write),.rst(rst));
+   reg16 iREG0 (.q(reg0out),.d(reg0in),.clk(clk),.en(write_sel[0] & write),.rst_n(rst_n));
+   reg16 iREG1 (.q(reg1out),.d(reg1in),.clk(clk),.en(write_sel[1] & write),.rst_n(rst_n));
+   reg16 iREG2 (.q(reg2out),.d(reg2in),.clk(clk),.en(write_sel[2] & write),.rst_n(rst_n));
+   reg16 iREG3 (.q(reg3out),.d(reg3in),.clk(clk),.en(write_sel[3] & write),.rst_n(rst_n));
+   reg16 iREG4 (.q(reg4out),.d(reg4in),.clk(clk),.en(write_sel[4] & write),.rst_n(rst_n));
+   reg16 iREG5 (.q(reg5out),.d(reg5in),.clk(clk),.en(write_sel[5] & write),.rst_n(rst_n));
+   reg16 iREG6 (.q(reg6out),.d(reg6in),.clk(clk),.en(write_sel[6] & write),.rst_n(rst_n));
+   reg16 iREG7 (.q(reg7out),.d(reg7in),.clk(clk),.en(write_sel[7] & write),.rst_n(rst_n));
       
    // 8 to 1 mux for register 1 data
    always @* case (read1regsel)
