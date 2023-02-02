@@ -1,4 +1,4 @@
-module MiniLab0
+module MiniLab0();
 
 
 proc PROC (
@@ -14,9 +14,9 @@ proc PROC (
 
 
     // Instruction memory
-    imem IMEM (.clk(), .addr(), .inst());
+imem IMEM (.clk(), .addr(), .inst());
 
-    // Data memory
-    dmem DMEM (.clk(), .wr(), .en(), .addr(), .data_in(), .data_out());
+// Data memory
+dmem DMEM (.clk(), .wr(), .en(), .addr(), .data_in(), .data_out());
 
 endmodule
