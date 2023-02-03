@@ -10,7 +10,7 @@ module imem (clk, addr, inst);
    reg [15:0] inst_r;
 
    initial begin
-      $readmemh("../../out/out.hex", mem);
+      $readmemh("instr.hex", mem);
    end
 
    always @(posedge clk) begin
