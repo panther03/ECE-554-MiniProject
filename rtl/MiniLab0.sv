@@ -1,5 +1,7 @@
 module MiniLab0(clk, rst_n, LEDR_out, SW_in);
 
+`include "mem_defs.vh"
+
 input clk;
 input rst_n;
 
@@ -44,9 +46,9 @@ assign data_mem_to_proc_checked = (daddr==16'hC001) ? {6'h00 , SW_in} : data_mem
 
 
 // Instruction memory
-imem IMEM (.clk(clk), .addr(iaddr), .inst(inst));
+imem IMEM (.clk(clk), .addr(iaddr[IMEM_DEPTH-1:0]), .inst(inst));
 
 // Data memory
-dmem DMEM (.clk(clk), .wr(wr_unchecked), .en(en), .addr(daddr), .data_in(data_proc_to_mem), .data_out(data_mem_to_proc_unchecked));
+dmem DMEM (.clk(clk), .wr(wr_unchecked), .en(en), .addr(daddr[DMEM_DEPTH-1:0]), .data_in(data_proc_to_mem), .data_out(data_mem_to_proc_unchecked));
 
 endmodule

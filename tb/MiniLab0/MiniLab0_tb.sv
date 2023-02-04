@@ -11,7 +11,7 @@ initial begin;
     stim_clk = 0;
     stim_rst_n = 0;
 
-    #5 stim_rst_n = 1;
+    #10 stim_rst_n = 1;
 
     
 
