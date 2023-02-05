@@ -1,4 +1,4 @@
-ASM_PROG ?= "test.asm"
+ASM_PROG ?= "mmioTest.asm"
 FPGA_DEV ?= "de1_soc"
 
 FW_DIR = "fw/"
