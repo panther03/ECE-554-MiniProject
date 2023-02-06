@@ -1,4 +1,4 @@
-module MiniLab0(CLOCK_50, RST_n, LEDR_out, SW_in);
+module MiniLab0(CLOCK_50, RST_n, LEDR_out, SW_in, halt);
 
 `include "mem_defs.vh"
 
@@ -17,6 +17,8 @@ wire clk = CLOCK_50;
 input [9:0] SW_in;
 output reg [9:0] LEDR_out;
 
+output halt;
+
 logic [15:0] iaddr;
 logic [15:0] daddr;
 logic [15:0] inst;
@@ -34,6 +36,8 @@ logic LEDR_en;
 proc PROC (
    // Error signal
    .err(), 
+   // Halt signal
+   .halt(halt),
    // Clock and reset
    .clk(clk), .rst_n(rst_n),
    // Instruction memory signals

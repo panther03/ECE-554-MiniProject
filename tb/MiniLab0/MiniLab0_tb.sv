@@ -6,7 +6,7 @@ logic stim_rst_n;
 logic [9:0] stim_sw;
 logic [9:0] led_out;
 
-MiniLab0 iDUT (.CLOCK_50(stim_clk), .RST_n(stim_rst_n), .LEDR_out(led_out), .SW_in(stim_sw));
+MiniLab0 iDUT (.CLOCK_50(stim_clk), .RST_n(stim_rst_n), .LEDR_out(led_out), .SW_in(stim_sw), .halt(halt));
 
 
 initial begin;
@@ -20,9 +20,10 @@ initial begin;
 
     fork
         begin: wait_for_halt
-            @(posedge iDUT.PROC.MEM_WB_ctrl_Halt_out);
+            @(posedge halt);
+            disable halt_timeout;
         end
-        begin
+        begin: halt_timeout;
             repeat (1000) @(posedge stim_clk);
             disable wait_for_halt;
             $display("Timed out waiting for processor's halt signal..");

@@ -15,12 +15,22 @@ module dmem (clk, wr, en, addr, data_in, data_out);
 
    // Don't need an initial block because Altera says BRAM is
    // always initialized to 0 at power-up
+   /*integer i;
 
-   always @(posedge clk) begin
-      if (en)
+   initial begin
+      for (i=0; i < (2**DMEM_DEPTH); i=i+1) begin
+         mem[i] = 0;
+      end
+   end*/
+
+   always @(negedge clk) begin
+      if (en) begin
          if (wr)
             mem[addr] <= data_in;
          data_out_r <= mem[addr];
+      end else begin
+         data_out_r <= 0;
+      end
    end
 
    assign data_out = data_out_r;

@@ -4,6 +4,8 @@
 module proc (/*AUTOARG*/
    // Error signal
    err, 
+   // Halt signal,
+   halt,
    // Clock and reset
    clk, rst_n,
    // Instruction memory signals
@@ -13,6 +15,7 @@ module proc (/*AUTOARG*/
    );
 
    output err;
+   output halt;
 
    input clk;
    input rst_n;
@@ -164,7 +167,7 @@ module proc (/*AUTOARG*/
    wire all_halts = Halt | ID_EX_ctrl_Halt_out | EX_MEM_ctrl_Halt_out | MEM_WB_ctrl_Halt_out;
 
    fetch iFETCH(.clk(clk), .rst_n(rst_n), .fetch_err(fetch_err), 
-      .inst(inst), .stall(stall), .flush(flush), .JType(JType), .CondOp(CondOp),
+      .stall(stall), .flush(flush), .JType(JType), .CondOp(CondOp),
       .iaddr(iaddr), .pc_inc_out(pc_inc), .pc_inc_in(IF_ID_pc_inc_out), .reg1(reg1_frwrd_fetch),
       .Halt(all_halts), .Rtn(Rtn), .Exc(Exc), .ofs(ofs), .imm(imm));
    
@@ -378,6 +381,7 @@ module proc (/*AUTOARG*/
    ////////////////////
    
    assign write_in = MEM_WB_ctrl_MemToReg_out ? MEM_WB_mem_out_out : MEM_WB_alu_out_out;
+   assign halt = MEM_WB_ctrl_Halt_out;
 
    ////////////////////////////
    // hazard detection unit //
