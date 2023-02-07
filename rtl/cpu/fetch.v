@@ -1,11 +1,10 @@
-module fetch (inst, pc_inc_in, pc_inc_out, iaddr,
+module fetch (pc_inc_in, pc_inc_out, iaddr,
               reg1, ofs, imm, stall, flush,
               JType, CondOp, Halt, Rtn, Exc,
               clk, rst_n, fetch_err);
 
 	input clk, rst_n;
     
-	input [15:0] inst;
     input [15:0] reg1, imm, ofs;
     input [15:0] pc_inc_in;
     input stall;

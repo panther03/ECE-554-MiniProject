@@ -4,6 +4,9 @@ fpga/*/*
 !fpga/*/Makefile
 !fpga/*/*.qsf
 !fpga/*/*.qpf
+!fpga/*/*.sdc
+!fpga/*/*.qip
+!fpga/*/*.sip
 
 tb/*/*
 !tb/*/*.v

@@ -66,14 +66,14 @@ module rf (
 
    // 8 to 1 mux for register destination
    always @* case (writeregsel)
-      3'b000 : begin reg0in = writedata; reg1in = 0; reg2in = 0; reg3in = 0; reg4in = 0; reg5in = 0; reg6in = 0; reg7in = 0; end
-      3'b001 : begin reg1in = writedata; reg0in = 0; reg2in = 0; reg3in = 0; reg4in = 0; reg5in = 0; reg6in = 0; reg7in = 0; end
-      3'b010 : begin reg2in = writedata; reg0in = 0; reg1in = 0; reg3in = 0; reg4in = 0; reg5in = 0; reg6in = 0; reg7in = 0; end
-      3'b011 : begin reg3in = writedata; reg0in = 0; reg1in = 0; reg2in = 0; reg4in = 0; reg5in = 0; reg6in = 0; reg7in = 0; end
-      3'b100 : begin reg4in = writedata; reg0in = 0; reg1in = 0; reg2in = 0; reg3in = 0; reg5in = 0; reg6in = 0; reg7in = 0; end
-      3'b101 : begin reg5in = writedata; reg0in = 0; reg1in = 0; reg2in = 0; reg3in = 0; reg4in = 0; reg6in = 0; reg7in = 0; end
-      3'b110 : begin reg6in = writedata; reg0in = 0; reg1in = 0; reg2in = 0; reg3in = 0; reg4in = 0; reg5in = 0; reg7in = 0; end
-      3'b111 : begin reg7in = writedata; reg0in = 0; reg1in = 0; reg2in = 0; reg3in = 0; reg4in = 0; reg5in = 0; reg6in = 0; end
+      3'b000 : reg0in = writedata;
+      3'b001 : reg1in = writedata;
+      3'b010 : reg2in = writedata;
+      3'b011 : reg3in = writedata;
+      3'b100 : reg4in = writedata;
+      3'b101 : reg5in = writedata;
+      3'b110 : reg6in = writedata;
+      3'b111 : reg7in = writedata;
    endcase
 
    // we don't consider an error case for rf,

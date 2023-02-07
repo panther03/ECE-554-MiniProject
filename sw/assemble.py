@@ -306,7 +306,7 @@ if __name__ == "__main__":
         addr = 0
         for (inst_bin, code) in zip(new_imem, code):
             inst_val = int(inst_bin, base=2)
-            if (label_name := labels_reversed.get(addr * 2)):
+            if (label_name := labels_reversed.get(addr)):
                 hex_str = f"@{addr:04x} {inst_val:04x}  // {label_name}: {code}"
             else:
                 hex_str = f"@{addr:04x} {inst_val:04x}  // {code}"
@@ -317,7 +317,7 @@ if __name__ == "__main__":
                 debug_out.writelines([inst_val_str[:2] + "\n", inst_val_str[2:] + "\n"])
             else:
                 print(hex_str)
-            addr += 1
+            addr += 2
 
         if args.out_file:
             hex_out.close()
