@@ -11,7 +11,7 @@ module proc (/*AUTOARG*/
    // Instruction memory signals
    iaddr, inst,
    // Data memory signals
-   daddr, wr, en, data_proc_to_mem, data_mem_to_proc
+   daddr, we, data_proc_to_mem, data_mem_to_proc
    );
 
    output err;
@@ -27,8 +27,7 @@ module proc (/*AUTOARG*/
    input [15:0] inst;
 
    output [15:0] daddr;
-   output wr;
-   output en;
+   output we;
    output [15:0] data_proc_to_mem;
    input  [15:0] data_mem_to_proc;
 
@@ -111,7 +110,6 @@ module proc (/*AUTOARG*/
 
    logic EX_MEM_ctrl_RegWrite_in, EX_MEM_ctrl_RegWrite_out;
    logic EX_MEM_ctrl_MemWrite_in, EX_MEM_ctrl_MemWrite_out;
-   logic EX_MEM_ctrl_MemRead_in, EX_MEM_ctrl_MemRead_out;
    logic EX_MEM_ctrl_MemToReg_in, EX_MEM_ctrl_MemToReg_out;
 
    logic EX_MEM_ctrl_Halt_in, EX_MEM_ctrl_Halt_out;
@@ -305,7 +303,6 @@ module proc (/*AUTOARG*/
 
    assign EX_MEM_ctrl_RegWrite_in = ID_EX_ctrl_RegWrite_out;
    assign EX_MEM_ctrl_MemWrite_in = ID_EX_ctrl_MemWrite_out;
-   assign EX_MEM_ctrl_MemRead_in = ID_EX_ctrl_MemRead_out;
    assign EX_MEM_ctrl_MemToReg_in = ID_EX_ctrl_MemToReg_out;
 
    assign EX_MEM_ctrl_Halt_in = ID_EX_ctrl_Halt_out;
@@ -318,7 +315,6 @@ module proc (/*AUTOARG*/
       if (!rst_n) begin
          EX_MEM_ctrl_RegWrite_out <= 0;
          EX_MEM_ctrl_MemWrite_out <= 0;
-         EX_MEM_ctrl_MemRead_out <= 0;
          EX_MEM_ctrl_MemToReg_out <= 0;
          EX_MEM_alu_out_out <= 0;
          EX_MEM_reg2_out <= 0;
@@ -327,7 +323,6 @@ module proc (/*AUTOARG*/
       end else begin
          EX_MEM_ctrl_RegWrite_out <= EX_MEM_ctrl_RegWrite_in;
          EX_MEM_ctrl_MemWrite_out <= EX_MEM_ctrl_MemWrite_in;
-         EX_MEM_ctrl_MemRead_out <= EX_MEM_ctrl_MemRead_in;
          EX_MEM_ctrl_MemToReg_out <= EX_MEM_ctrl_MemToReg_in;
          EX_MEM_alu_out_out <= EX_MEM_alu_out_in;
          EX_MEM_reg2_out <= EX_MEM_reg2_in;
@@ -344,8 +339,7 @@ module proc (/*AUTOARG*/
    assign daddr = EX_MEM_alu_out_out;
    assign mem_out = data_mem_to_proc;
    assign data_proc_to_mem = EX_MEM_reg2_out;
-   assign en = EX_MEM_ctrl_MemRead_out | EX_MEM_ctrl_MemWrite_out;
-   assign wr = EX_MEM_ctrl_MemWrite_out;
+   assign we = EX_MEM_ctrl_MemWrite_out;
 
    ////////////////////////
    // MEM/WB transition //

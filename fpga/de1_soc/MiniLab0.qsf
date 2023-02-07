@@ -43,30 +43,94 @@ set_global_assignment -name TOP_LEVEL_ENTITY MiniLab0
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 21.1.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "16:38:36  FEBRUARY 02, 2023"
 set_global_assignment -name LAST_QUARTUS_VERSION "21.1.0 Lite Edition"
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/MiniLab0.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/mem/dmem.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/mem/imem.sv
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/shifter.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/rf.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/reg16.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/proc.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/hazard.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/forward.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/fetch.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/execute.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/dff.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/decoder3t8.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/decode.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/cpa.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/control.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/cla4.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/cla16.v
-set_global_assignment -name VERILOG_FILE ../../rtl/cpu/alu.v
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 256
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+
+#============================================================
+# CLOCK
+#============================================================
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_50
+set_location_assignment PIN_Y26 -to CLOCK_50
+
+#============================================================
+# KEY
+#============================================================
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to RST_n
+set_location_assignment PIN_AA14 -to RST_n
+
+#============================================================
+# LED
+#============================================================
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR_out[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR_out[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR_out[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR_out[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR_out[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR_out[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR_out[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR_out[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR_out[8]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDR_out[9]
+set_location_assignment PIN_V16 -to LEDR_out[0]
+set_location_assignment PIN_W16 -to LEDR_out[1]
+set_location_assignment PIN_V17 -to LEDR_out[2]
+set_location_assignment PIN_V18 -to LEDR_out[3]
+set_location_assignment PIN_W17 -to LEDR_out[4]
+set_location_assignment PIN_W19 -to LEDR_out[5]
+set_location_assignment PIN_Y19 -to LEDR_out[6]
+set_location_assignment PIN_W20 -to LEDR_out[7]
+set_location_assignment PIN_W21 -to LEDR_out[8]
+set_location_assignment PIN_Y21 -to LEDR_out[9]
+
+#============================================================
+# SW
+#============================================================
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW_in[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW_in[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW_in[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW_in[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW_in[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW_in[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW_in[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW_in[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW_in[8]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW_in[9]
+set_location_assignment PIN_AB12 -to SW_in[0]
+set_location_assignment PIN_AC12 -to SW_in[1]
+set_location_assignment PIN_AF9  -to SW_in[2]
+set_location_assignment PIN_AF10 -to SW_in[3]
+set_location_assignment PIN_AD11 -to SW_in[4]
+set_location_assignment PIN_AD12 -to SW_in[5]
+set_location_assignment PIN_AE11 -to SW_in[6]
+set_location_assignment PIN_AC9  -to SW_in[7]
+set_location_assignment PIN_AD10 -to SW_in[8]
+set_location_assignment PIN_AE12 -to SW_in[9]
+set_global_assignment -name SDC_FILE MiniProject0.sdc
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/mem/imem.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/mem/dmem.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/rst_synch.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/MiniLab0.sv
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/control.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/shifter.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/rf.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/reg16.v
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/proc.sv
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/hazard.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/forward.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/fetch.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/execute.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/decoder3t8.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/decode.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/cpa.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/cla4.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/cla16.v
+set_global_assignment -name VERILOG_FILE ../../rtl/cpu/alu.v
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name SEARCH_PATH "/shared/WISC/ECE554/ECE-554-MiniProject0/rtl/inc"
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -26,9 +26,8 @@ logic [15:0] data_mem_to_proc_map;
 logic [15:0] data_mem_to_proc_dmem;
 logic [15:0] data_proc_to_mem;
 
-logic wr_map;
-logic wr_dmem;
-logic en;
+logic we_map;
+logic we_dmem;
 
 logic LEDR_en;
 
@@ -43,7 +42,7 @@ proc PROC (
    // Instruction memory signals
    .iaddr(iaddr), .inst(inst),
    // Data memory signals
-   .daddr(daddr), .wr(wr_map), .en(en),
+   .daddr(daddr), .we(we_map),
    .data_proc_to_mem(data_proc_to_mem), 
    .data_mem_to_proc(data_mem_to_proc_map)
 );
@@ -58,8 +57,7 @@ imem IMEM (
 // Data memory
 dmem DMEM (
   .clk(clk),
-  .wr(wr_dmem),
-  .en(en),
+  .we(we),
   .addr(daddr[DMEM_DEPTH-1:0]),
   .data_in(data_proc_to_mem),
   .data_out(data_mem_to_proc_dmem)
@@ -69,9 +67,9 @@ dmem DMEM (
 // Memory map logic //
 /////////////////////
 
-assign wr_dmem = (|daddr[15:DMEM_DEPTH]) ? 0 : wr_map;
+assign we_dmem = (|daddr[15:DMEM_DEPTH]) ? 0 : we_map;
 
-assign LEDR_en = (wr_map && (daddr==16'hC000));
+assign LEDR_en = (we_map && (daddr==16'hC000));
 always_ff @(posedge clk, negedge rst_n)
       if (!rst_n)
         LEDR_out <= 0;

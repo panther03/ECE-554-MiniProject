@@ -1,10 +1,9 @@
-module dmem (clk, wr, en, addr, data_in, data_out);
+module dmem (clk, we, addr, data_in, data_out);
 
    `include "mem_defs.vh"
 
    input                   clk;
-   input                   wr;
-   input                   en;
+   input                   we;
    input  [DMEM_DEPTH-1:0] addr;
    input  [15:0]           data_in;
    output [15:0]           data_out;
@@ -23,14 +22,13 @@ module dmem (clk, wr, en, addr, data_in, data_out);
       end
    end*/
 
+   // Intel HDL Coding Styles, 14.1.7 "Simple Dual-Port, Dual-Clock Synchronous RAM"
+
    always @(negedge clk) begin
-      if (en) begin
-         if (wr)
-            mem[addr] <= data_in;
-         data_out_r <= mem[addr];
-      end else begin
-         data_out_r <= 0;
+      if (we) begin
+         mem[addr] = data_in;
       end
+      data_out_r <= mem[addr];
    end
 
    assign data_out = data_out_r;
