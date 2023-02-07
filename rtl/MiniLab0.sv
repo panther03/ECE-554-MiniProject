@@ -5,6 +5,9 @@ module MiniLab0(CLOCK_50, RST_n, LEDR_out, SW_in, halt);
 input CLOCK_50;
 input RST_n;
 
+input [9:0] SW_in;
+output reg [9:0] LEDR_out;
+
 wire rst_n;
 rst_synch RST (
   .clk(CLOCK_50),
@@ -14,8 +17,7 @@ rst_synch RST (
 
 wire clk = CLOCK_50;
 
-input [9:0] SW_in;
-output reg [9:0] LEDR_out;
+
 
 output halt;
 
@@ -57,7 +59,7 @@ imem IMEM (
 // Data memory
 dmem DMEM (
   .clk(clk),
-  .we(we),
+  .we(we_dmem),
   .addr(daddr[DMEM_DEPTH-1:0]),
   .data_in(data_proc_to_mem),
   .data_out(data_mem_to_proc_dmem)
