@@ -24,22 +24,22 @@ initial begin;
         begin: run_tests
 
             wait (iDUT.iaddr == 16'h000c); // Wait until the the processor is ready to check for switch 1
-            $display("Instruction 0x000c");
+            $display("-> Instruction 0x000c");
             $display("Turning on Switch 1");
             stim_sw = 10'h001;
 
             wait (iDUT.iaddr == 16'h0018); // Wait until the the processor is ready to check for switch 2
-            $display("Instruction 0x0018");
+            $display("-> Instruction 0x0018");
             $display("Turning on Switch 2");
             stim_sw = 10'h002;
 
             wait (iDUT.iaddr == 16'h0024); // Wait until the the processor is ready to check for switch 3
-            $display("Instruction 0x0024");
+            $display("-> Instruction 0x0024");
             $display("Turning on Switch 3");
             stim_sw = 10'h003;
 
             wait (iDUT.iaddr == 16'h0036); // Wait until after the processor has turned on LED 1
-            $display("Instruction 0x0036");
+            $display("-> Instruction 0x0036");
             if (led_out == 10'h001)
                 $display("LED 1 is on");
             else begin
@@ -48,7 +48,7 @@ initial begin;
             end
 
             wait (iDUT.iaddr == 16'h0042); // Wait until after the processor has turned on LED 2
-            $display("Instruction 0x00342");
+            $display("-> Instruction 0x00342");
             if (led_out == 10'h002)
                 $display("LED 2 is on");
             else begin
