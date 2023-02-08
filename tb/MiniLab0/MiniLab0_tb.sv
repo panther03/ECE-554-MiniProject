@@ -68,7 +68,7 @@ initial begin;
             $stop();
         end
     join
-    $display("Yahoo, All Tests Passed");
+    $display("\nYahoo!!! All Tests Passed\n");
     $finish();
 end
 
@@ -78,7 +78,7 @@ always
 
 endmodule
 
-"""
+/*
 To be run using the following asm file:
 ---------
 // Load Address of LED into R0
@@ -142,4 +142,4 @@ HALT
 .FAIL:
 J .FAIL
 
-"""
+*/
