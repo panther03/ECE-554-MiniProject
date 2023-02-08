@@ -23,36 +23,37 @@ initial begin;
     fork
         begin: run_tests
 
-            wait (iDUT.iaddr == 16'h000c);
+            wait (iDUT.iaddr == 16'h000c); // Wait until the the processor is ready to check for switch 1
             $display("Instruction 0x000c");
             $display("Turning on Switch 1");
             stim_sw = 10'h001;
 
-            wait (iDUT.iaddr == 16'h0018);
+            wait (iDUT.iaddr == 16'h0018); // Wait until the the processor is ready to check for switch 2
             $display("Instruction 0x0018");
             $display("Turning on Switch 2");
             stim_sw = 10'h002;
 
-            wait (iDUT.iaddr == 16'h0024);
+            wait (iDUT.iaddr == 16'h0024); // Wait until the the processor is ready to check for switch 3
             $display("Instruction 0x0024");
             $display("Turning on Switch 3");
             stim_sw = 10'h003;
 
-            wait (iDUT.iaddr == 16'h0036);
+            wait (iDUT.iaddr == 16'h0036); // Wait until after the processor has turned on LED 1
             $display("Instruction 0x0036");
             if (led_out == 10'h001)
                 $display("LED 1 is on");
             else begin
                 $display("ERROR: LED 1 is off");
-                $display("%h", led_out);
+                $stop();
             end
 
-            wait (iDUT.iaddr == 16'h0042);
+            wait (iDUT.iaddr == 16'h0042); // Wait until after the processor has turned on LED 2
             $display("Instruction 0x00342");
             if (led_out == 10'h002)
                 $display("LED 2 is on");
             else begin
                 $display("ERROR: LED 2 is off");
+                $stop();
             end
 
             
@@ -63,10 +64,11 @@ initial begin;
             repeat (1000) @(posedge stim_clk);
             disable run_tests;
             $display("Timed out waiting for processor's halt signal..");
+            $display("This could mean a switch was not set and the processor timed out while waiting for it");
             $stop();
         end
     join
-
+    $display("Yahoo, All Tests Passed");
     $finish();
 end
 
