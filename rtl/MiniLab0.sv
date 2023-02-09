@@ -1,6 +1,7 @@
-module MiniLab0(CLOCK_50, RST_n, LEDR_out, SW_in, halt);
-
-`include "mem_defs.vh"
+module MiniLab0 #(
+  parameter IMEM_DEPTH = 14,
+  parameter DMEM_DEPTH = 13
+) (CLOCK_50, RST_n, LEDR_out, SW_in, halt);
 
 input CLOCK_50;
 input RST_n;
@@ -50,14 +51,18 @@ proc PROC (
 );
 
 // Instruction memory
-imem IMEM (
+imem #(
+  .IMEM_DEPTH(IMEM_DEPTH)
+) IMEM (
   .clk(clk),
   .addr(iaddr[IMEM_DEPTH-1:0]),
   .inst(inst)
 );
 
 // Data memory
-dmem DMEM (
+dmem #(
+  .DMEM_DEPTH(DMEM_DEPTH)
+) DMEM (
   .clk(clk),
   .we(we_dmem),
   .addr(daddr[DMEM_DEPTH-1:0]),

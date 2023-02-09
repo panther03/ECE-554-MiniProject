@@ -1,6 +1,6 @@
-module dmem (clk, we, addr, data_in, data_out);
-
-   `include "mem_defs.vh"
+module dmem #(
+   parameter DMEM_DEPTH = 1
+) (clk, we, addr, data_in, data_out);
 
    input                   clk;
    input                   we;
@@ -8,8 +8,10 @@ module dmem (clk, we, addr, data_in, data_out);
    input  [15:0]           data_in;
    output [15:0]           data_out;
 
+   localparam DMEM_ENTRIES = 1 << DMEM_DEPTH;
+
    
-   reg [15:0] mem [(2**DMEM_DEPTH)-1:0];
+   reg [15:0] mem [DMEM_ENTRIES-1:0];
    reg [15:0] data_out_r;
 
    // Don't need an initial block because Altera says BRAM is
@@ -17,7 +19,7 @@ module dmem (clk, we, addr, data_in, data_out);
    /*integer i;
 
    initial begin
-      for (i=0; i < (2**DMEM_DEPTH); i=i+1) begin
+      for (i=0; i < DMEM_ENTRIES; i=i+1) begin
          mem[i] = 0;
       end
    end*/
