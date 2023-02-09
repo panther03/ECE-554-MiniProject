@@ -20,22 +20,22 @@ fpga: $(OUT_DIR) fw
 	@make -C $(FPGA_DIR)/$(FPGA_DEV)
 
 sim:
-	ifeq ($(TB),)
+ifeq ($(TB),)
 	@python3 $(SW_DIR)/sim.py test
-	else
+else
 	@python3 $(SW_DIR)/sim.py test $(TB)
-	endif
+endif
 
 sim_gui:
-	ifeq ($(TB),)
+ifeq ($(TB),)
 	@python3 $(SW_DIR)/sim.py gui
-	else
+else
 	@python3 $(SW_DIR)/sim.py gui $(TB)
-	endif
+endif
 
 sim_proj:
-	ifeq ($(TB),)
+ifeq ($(TB),)
 	@python3 $(SW_DIR)/sim.py proj
-	else
+else
 	@python3 $(SW_DIR)/sim.py proj $(TB)
-	endif
+endif
