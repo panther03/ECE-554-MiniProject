@@ -47,7 +47,7 @@ module fetch (pc_inc_in, pc_inc_out, iaddr,
 
     assign addr_base = JType[1] ? pc_inc_in : reg1;
     assign addr_ofs = JType[0] ? imm : ofs;
-    cla16 iBR_ADD(.A(addr_base),.B(addr_ofs),.Cin(1'b0),.Cout(),.S(addr));
+    assign addr = addr_base + addr_ofs;
 
     reg [15:0] pc_target;
 
@@ -75,7 +75,7 @@ module fetch (pc_inc_in, pc_inc_out, iaddr,
     // pc_inc (adder) logic //
     /////////////////////////
 
-	cla16 iADD_PC (.A(pc),.B(Halt ? 16'h0 : 16'h2),.Cin(1'b0),.Cout(),.S(pc_inc_out)); 
+	assign pc_inc_out = pc + (Halt ? 16'h0 : 16'h2);
 
 	// we don't consider an error case for fetch,
    	// so err is tied low.
