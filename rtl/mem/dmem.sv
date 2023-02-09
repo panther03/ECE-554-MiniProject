@@ -15,6 +15,8 @@ module dmem #(
    reg [15:0] rdata_r;
 
    // Intel HDL Coding Styles, 14.1.7 "Simple Dual-Port, Dual-Clock Synchronous RAM"
+   // We read on negative edge becuase the 552 memory reads asyncronously
+   // We also write on negative edge because you have to write and read on the same edge
    always @(negedge clk) begin
       if (we_i) begin
          mem_r[addr_i] <= wdata_i;

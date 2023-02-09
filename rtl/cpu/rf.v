@@ -17,6 +17,7 @@ module rf (
 
    wire [7:0] write_sel;
 
+   // We had to add this synthesis directive becasue Quartus was inferring the small memory as registers
    (* ramstyle = "m10k" *) reg [15:0] rf1 [7:0];
    (* ramstyle = "m10k" *) reg [15:0] rf2 [7:0];
 

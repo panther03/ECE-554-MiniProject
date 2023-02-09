@@ -15,6 +15,7 @@ module imem #(
       $readmemh("../../out/out.hex", mem_r);
    end
 
+   // We read on negative edge becuase the 552 memory reads asyncronously
    always @(negedge clk) begin
       inst_r <= mem_r[addr_i];
    end
