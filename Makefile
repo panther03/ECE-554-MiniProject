@@ -26,14 +26,14 @@ else
 	@python3 $(SW_DIR)/sim.py test $(TB)
 endif
 
-sim_gui:
+gui:
 ifeq ($(TB),)
 	@python3 $(SW_DIR)/sim.py gui
 else
 	@python3 $(SW_DIR)/sim.py gui $(TB)
 endif
 
-sim_proj:
+proj:
 ifeq ($(TB),)
 	@python3 $(SW_DIR)/sim.py proj
 else
