@@ -2,9 +2,5 @@
     "MiniLab0": {
         "top": "MiniLab0_tb",
         "fw": "MiniLab0.asm"
-    },
-    "cpu": {
-        "top": "cpu_tb",
-        "fw": "cputest.asm"
     }
 }
