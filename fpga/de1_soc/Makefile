@@ -1,9 +1,17 @@
-PROJ="MiniProject0"
-REVISION="MiniLab0"
+PROJ="MiniProject"
+REVISION="MiniLab"
+
+ifeq ($(QUARTUS_BIN),)
+QUARTUS_SH="$(QUARTUS_BIN)/quartus_sh"
+QUARTUS_PGM="$(QUARTUS_BIN)/quartus_pgm"
+else
+QUARTUS_SH="quartus_sh"
+QUARTUS_PGM="quartus_pgm"
+endif
 
 all: compile
 	cp output_files/$(REVISION).sof ../../out/out.sof
 	cp output_files/$(REVISION).pof ../../out/out.pof
 
 compile:
-	quartus_sh --flow compile $(PROJ) -c $(REVISION)
+	$(QUARTUS_SH) --flow compile $(PROJ) -c $(REVISION)

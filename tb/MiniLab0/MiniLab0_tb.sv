@@ -11,7 +11,7 @@ logic [9:0] led_out;
 
 logic halt;
 
-MiniLab0 iDUT (
+MiniLab iDUT (
     .CLOCK_50(stim_clk),
     .RST_n(stim_rst_n),
     .halt(halt),
