@@ -2,5 +2,8 @@
     "MiniLab0": {
         "top": "MiniLab0_tb",
         "fw": "MiniLab0.asm"
+    },
+    "UARTLoading": {
+        "top": "UARTLoading_tb"
     }
 }

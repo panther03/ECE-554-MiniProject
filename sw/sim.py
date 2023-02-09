@@ -89,7 +89,7 @@ def run_flow(flow, tb, tb_cfg):
     if not os.path.exists(tb_dir):
         raise RuntimeError(f"tb directory {tb_dir} doesn't exist. Quitting.")
 
-    fw_file = tb_cfg["fw"]
+    fw_file = tb_cfg.get("fw")
     if fw_file:
         subprocess.run(f"python3 sw/assemble.py fw/{fw_file} -o out/out.hex", shell=True, check=True, capture_output=True)
 

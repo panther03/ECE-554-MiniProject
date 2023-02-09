@@ -284,6 +284,7 @@ if __name__ == "__main__":
     parser.add_argument("in_file")
     parser.add_argument("-o", "--out_file")
     parser.add_argument("-d", "--debug_file", action='store_true')
+    parser.add_argument("-b", "--bin_file", action='store_true')
 
     args = parser.parse_args()
 
@@ -302,6 +303,9 @@ if __name__ == "__main__":
         if args.debug_file:
             debug_out = open("debug.out", 'w')
             debug_out.write("@0\n")
+
+        if args.bin_file:
+            bin_out = open("debug.bin", 'wb')
         
         addr = 0
         for (inst_bin, code) in zip(new_imem, code):
@@ -312,6 +316,9 @@ if __name__ == "__main__":
                 hex_str = f"@{addr:04x} {inst_val:04x}  // {code}"
             if args.out_file:
                 hex_out.write(hex_str + "\n")
+            if args.bin_file:
+                bytes_obj = inst_val.to_bytes(2, 'little')
+                bin_out.write(bytes_obj)
             if args.debug_file:
                 inst_val_str = format(inst_val, "04x")
                 debug_out.writelines([inst_val_str[:2] + "\n", inst_val_str[2:] + "\n"])
@@ -324,3 +331,6 @@ if __name__ == "__main__":
 
         if args.debug_file:
             debug_out.close()
+
+        if args.bin_file:
+            bin_out.close()

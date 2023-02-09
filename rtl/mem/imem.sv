@@ -3,6 +3,8 @@ module imem #(
 ) (
    input                   clk,
    input  [IMEM_DEPTH-1:0] addr_i,
+   input                   we_i,
+   input  [15:0]           wdata_i,
    output [15:0]           inst_o
 );
 
@@ -11,11 +13,10 @@ module imem #(
    reg [15:0] mem_r [IMEM_ENTRIES-1:0];
    reg [15:0] inst_r;
 
-   initial begin
-      $readmemh("../../out/out.hex", mem_r);
-   end
-
    always @(negedge clk) begin
+      if (we_i) begin
+         mem_r[addr_i] <= wdata_i;
+      end
       inst_r <= mem_r[addr_i];
    end
 
