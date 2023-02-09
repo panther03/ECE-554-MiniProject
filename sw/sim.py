@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 """
 A script to run vsim testbenches for our repo structure.
-Relies on the following folder structure:
-tb/TEST1/{TEST1.mpf} -> top-level testbench has module name TEST1_tb
 
 Julien de Castelnau
 """
@@ -24,7 +22,6 @@ def scan_rtl_files(tb_dir):
         all_files += [os.path.relpath(root+"/"+f,tb_dir) for f in files if f.endswith(".v") or f.endswith(".sv")]
     for (root,dirs,files) in os.walk(tb_dir):
         all_files += [f for f in files if f.endswith(".v") or f.endswith(".sv")]
-    print(all_files)
     return all_files
 
 def proj(tb_dir, tb_name):
@@ -43,7 +40,7 @@ def proj(tb_dir, tb_name):
     vsim_command = f"\
         vsim -c -do \"project new . {tb_name}; project open {tb_name}; {file_commands}; quit\"\
     "
-    result = subprocess.run(vsim_command, shell=True, cwd=tb_dir).returncode
+    return subprocess.run(vsim_command, shell=True, cwd=tb_dir, stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL, check=True).returncode
 
 def gui(tb_dir, tb_name):
     vsim_command = f"\
@@ -52,12 +49,30 @@ def gui(tb_dir, tb_name):
     result = subprocess.Popen(vsim_command, shell=True, cwd=tb_dir)
 
 def test(tb_dir, tb_name, top):
-    print("????")
     vsim_command = f"\
         vsim -c -do \"project open ./{tb_name}.mpf; project compileall; vsim -c work.{top}; run -all; quit\"\
     "
-    result = subprocess.run(vsim_command, shell=True, cwd=tb_dir).returncode
-
+    result = subprocess.run(vsim_command, shell=True, cwd=tb_dir, capture_output=True, text=True)
+    if sys.stdout.isatty():
+        arrow = "\x1b[93m-> "
+        end = "\x1b[0m"
+        passed = "\x1b[32m passed!"
+        failed = "\x1b[31m failed!"
+    else:
+        arrow = "-> "
+        end = ""
+        passed = " passed!"
+        failed = " failed!"
+    if "yahoo" in result.stdout.lower():
+        print(arrow + tb_name + passed + end)
+        return 0
+    else:
+        print(arrow + tb_name + failed + end)
+        print(arrow + f"Here are the last 20 lines of ModelSim's output." + end)
+        for line in result.stdout.splitlines()[-20:]:
+            print(line)
+        print(arrow + f"See {tb_dir}transcript for more details." + end)
+        return 1
 
 
 #def test_tb(tb_name):
@@ -78,10 +93,6 @@ def run_flow(flow, tb, tb_cfg):
     if fw_file:
         subprocess.run(f"python3 sw/assemble.py fw/{fw_file} -o out/out.hex", shell=True, check=True, capture_output=True)
 
-#    if flow == "test":
-#
-#    elif flow == "gui":
-#
     if flow == "proj":
         proj(tb_dir, tb)
     elif flow == "gui":
@@ -89,7 +100,7 @@ def run_flow(flow, tb, tb_cfg):
         gui(tb_dir, tb)
     else: # flow == "test"
         proj(tb_dir, tb)
-        test(tb_dir, tb, tb_cfg["top"])
+        return test(tb_dir, tb, tb_cfg["top"])
 
 
 if __name__ == "__main__":
@@ -106,23 +117,25 @@ if __name__ == "__main__":
         raise RuntimeError("I could not find tb.json in the current directory. Did you execute this file from the 'sw/' directory? You should be in the root of the repo.")
 
     if args.tb is None:
+        res_or_all = False
         for (tb, tb_cfg) in tb_json.items():
-            results = run_flow(args.flow, tb, tb_cfg)
+            res = run_flow(args.flow, tb, tb_cfg)
+            if res:
+                res_or_all = True
+        
+        if res_or_all:
+            exit(1)
+        else:
+            exit(0)
+
     else:
         if (tb_cfg := tb_json[args.tb]):
-            results = run_flow(args.flow, args.tb, tb_cfg)
+            res = run_flow(args.flow, args.tb, tb_cfg)
+            if res:
+                exit(1)
+            else:
+                exit(0)
         else:
             raise RuntimeError(f"Could not find {args.tb} in tb.json!")
-
-    """else:
-        for dir_name in os.listdir(TB_DIR):
-            res = run_tb(dir_name)
-            if res:
-                # means one of em failed
-                print("One of the testbenches failed!", file=sys.stderr)
-                exit(res)
-
-    print("Yahoo! All testbenches passed...")
-    exit(0)"""
 
     
