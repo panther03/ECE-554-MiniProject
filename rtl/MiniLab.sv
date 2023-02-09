@@ -1,4 +1,4 @@
-module MiniLab0 #(
+module MiniLab #(
   parameter IMEM_DEPTH = 14,
   parameter DMEM_DEPTH = 13
 ) (

@@ -17,8 +17,8 @@ module rf (
 
    wire [7:0] write_sel;
 
-   reg [15:0] rf1 [7:0];
-   reg [15:0] rf2 [7:0];
+   (* ramstyle = "m10k" *) reg [15:0] rf1 [7:0];
+   (* ramstyle = "m10k" *) reg [15:0] rf2 [7:0];
 
    // Write and read register results on the negative edge.
    // Register bypass happens outside of this module so
