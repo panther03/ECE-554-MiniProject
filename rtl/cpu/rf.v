@@ -27,7 +27,7 @@ module rf (
    reg [15:0] rf1 [7:0];
    reg [15:0] rf2 [7:0];
 
-   always @(posedge clk) begin
+   always @(negedge clk) begin
       if (write) begin
          rf1[writeregsel] <= writedata;
          rf2[writeregsel] <= writedata;
