@@ -56,6 +56,7 @@ Please feel free to discuss any of these rules with me. I am just copying style 
     * Never declare output signals as reg. Keep the "_o" suffix and assign them to registers at the bottom of your file.
         * This makes it easier to organize the signal list at the top, and you can see all of the outputs at the bottom.
     * Use Verilog-2001 ANSI-style port declaration:
+    
         BAD: 
         ```verilog
         module (A, B, C);
@@ -63,6 +64,7 @@ Please feel free to discuss any of these rules with me. I am just copying style 
         input B;
         input C;
         ```
+        
         GOOD:
         ```verilog
         module (
