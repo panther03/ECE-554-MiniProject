@@ -1,29 +1,24 @@
 module imem #(
    parameter IMEM_DEPTH = 1
-) (clk, addr, inst);
-
-   input                   clk;
-   input  [IMEM_DEPTH-1:0] addr;
-   output [15:0]           inst;
+) (
+   input                   clk,
+   input  [IMEM_DEPTH-1:0] addr_i,
+   output [15:0]           inst_o
+);
 
    localparam IMEM_ENTRIES = 1 << IMEM_DEPTH;
    
-   reg [15:0] mem [IMEM_ENTRIES-1:0];
+   reg [15:0] mem_r [IMEM_ENTRIES-1:0];
    reg [15:0] inst_r;
 
-   //integer i;
-
    initial begin
-      /*for (i=0; i < (IMEM_ENTRIES); i=i+1) begin
-         mem[i] = 0;
-      end*/
-      $readmemh("../../out/out.hex", mem);
+      $readmemh("../../out/out.hex", mem_r);
    end
 
    always @(negedge clk) begin
-      inst_r <= mem[addr];
+      inst_r <= mem_r[addr_i];
    end
 
-   assign inst = inst_r;
+   assign inst_o = inst_r;
 
 endmodule

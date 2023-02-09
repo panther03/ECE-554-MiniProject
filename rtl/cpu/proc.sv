@@ -1,42 +1,27 @@
-/* $Author: karu $ */
-/* $LastChangedDate: 2009-03-04 23:09:45 -0600 (Wed, 04 Mar 2009) $ */
-/* $Rev: 45 $ */
-module proc (/*AUTOARG*/
-   // Error signal
-   err, 
-   // Halt signal,
-   halt,
+module proc (
    // Clock and reset
-   clk, rst_n,
+   input         clk,
+   input         rst_n,
    // Instruction memory signals
-   iaddr, inst,
+   output [15:0] iaddr_o,
+   input  [15:0] inst_i,
    // Data memory signals
-   daddr, we, data_proc_to_mem, data_mem_to_proc
-   );
-
-   output err;
-   output halt;
-
-   input clk;
-   input rst_n;
-
-   // these addresses are 16-bit despite the physical memory
-   // they are going to not being that large
-   // this is to allow for MMIO
-   output [15:0] iaddr;
-   input [15:0] inst;
-
-   output [15:0] daddr;
-   output we;
-   output [15:0] data_proc_to_mem;
-   input  [15:0] data_mem_to_proc;
-
+   output [15:0] daddr_o,
+   output        we_o,
+   output [15:0] data_proc_to_mem_o,
+   input  [15:0] data_mem_to_proc_i,
+   // Error and Halt status,
+   output        err_o,
+   output        halt_o
+);
 
    // Disclaimer: This codebase used dff.v modules instead of always blocks
    // due to CS552 restricting certain Verilog features
    // I have converted these into always blocks, however I have done so
-   // lazily to avoid introducing new logic bugss
+   // lazily to avoid introducing new logic bugs
    // The reasoning being that this codebase will not be with us for the whole semester (it will likely have to be rewritten.)
+
+   // I have also not converted the rest of the codebase to fit the style guidelines in README.md.
 
    ////////////////////////
    // fetch block wires //
@@ -166,15 +151,15 @@ module proc (/*AUTOARG*/
 
    fetch iFETCH(.clk(clk), .rst_n(rst_n), .fetch_err(fetch_err), 
       .stall(stall), .flush(flush), .JType(JType), .CondOp(CondOp),
-      .iaddr(iaddr), .pc_inc_out(pc_inc), .pc_inc_in(IF_ID_pc_inc_out), .reg1(reg1_frwrd_fetch),
+      .iaddr(iaddr_o), .pc_inc_out(pc_inc), .pc_inc_in(IF_ID_pc_inc_out), .reg1(reg1_frwrd_fetch),
       .Halt(all_halts), .Rtn(Rtn), .Exc(Exc), .ofs(ofs), .imm(imm));
    
    ///////////////////////
    // IF/ID transition //
    /////////////////////
 
-   // flip bit 11 to default to NOP instead of HALT
-   assign IF_ID_inst_in = inst ^ 16'h0800;
+   // flip bit 11 to default to NOP instead of HALT when we stall
+   assign IF_ID_inst_in = inst_i ^ 16'h0800;
    assign IF_ID_pc_inc_in = pc_inc;   
    
    // If we get a stall or halt, we recirculate values here.
@@ -223,7 +208,7 @@ module proc (/*AUTOARG*/
    // ID/EX transition //
    /////////////////////
 
-   // squash all control signals to 0 if we stalls
+   // squash all control signals to 0 if we stall
    assign ID_EX_ctrl_RegWrite_in = stall ? 0 : RegWrite;
    assign ID_EX_ctrl_MemWrite_in = stall ? 0 : MemWrite;
    assign ID_EX_ctrl_MemRead_in = stall ? 0 : MemRead;
@@ -336,10 +321,10 @@ module proc (/*AUTOARG*/
 
    // this has been moved outside of proc.v!
 
-   assign daddr = EX_MEM_alu_out_out;
-   assign mem_out = data_mem_to_proc;
-   assign data_proc_to_mem = EX_MEM_reg2_out;
-   assign we = EX_MEM_ctrl_MemWrite_out;
+   assign daddr_o = EX_MEM_alu_out_out;
+   assign mem_out = data_mem_to_proc_i;
+   assign data_proc_to_mem_o = EX_MEM_reg2_out;
+   assign we_o = EX_MEM_ctrl_MemWrite_out;
 
    ////////////////////////
    // MEM/WB transition //
@@ -375,7 +360,7 @@ module proc (/*AUTOARG*/
    ////////////////////
    
    assign write_in = MEM_WB_ctrl_MemToReg_out ? MEM_WB_mem_out_out : MEM_WB_alu_out_out;
-   assign halt = MEM_WB_ctrl_Halt_out;
+   assign halt_o = MEM_WB_ctrl_Halt_out;
 
    ////////////////////////////
    // hazard detection unit //
@@ -399,7 +384,7 @@ module proc (/*AUTOARG*/
       .EX_MEM_ctrl_regw(EX_MEM_ctrl_RegWrite_out),.MEM_WB_ctrl_regw(MEM_WB_ctrl_RegWrite_out));
 
    // error handling
-   assign err = ex_err | ctrl_err | fetch_err | decode_err;
+   assign err_o = ex_err | ctrl_err | fetch_err | decode_err;
 
    // Memory signals
 
