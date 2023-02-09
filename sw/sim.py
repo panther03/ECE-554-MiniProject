@@ -116,7 +116,18 @@ if __name__ == "__main__":
     except FileNotFoundError:
         raise RuntimeError("I could not find tb.json in the current directory. Did you execute this file from the 'sw/' directory? You should be in the root of the repo.")
 
-    if args.tb is None:
+    if args.tb:
+        if (tb_cfg := tb_json[args.tb]):
+            res = run_flow(args.flow, args.tb, tb_cfg)
+            if res:
+                exit(1)
+            else:
+                exit(0)
+        else:
+            raise RuntimeError(f"Could not find {args.tb} in tb.json!")
+        
+
+    else:
         res_or_all = False
         for (tb, tb_cfg) in tb_json.items():
             res = run_flow(args.flow, tb, tb_cfg)
@@ -127,15 +138,4 @@ if __name__ == "__main__":
             exit(1)
         else:
             exit(0)
-
-    else:
-        if (tb_cfg := tb_json[args.tb]):
-            res = run_flow(args.flow, args.tb, tb_cfg)
-            if res:
-                exit(1)
-            else:
-                exit(0)
-        else:
-            raise RuntimeError(f"Could not find {args.tb} in tb.json!")
-
     
