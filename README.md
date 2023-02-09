@@ -18,6 +18,7 @@ All of the mentioned programs should be in `$PATH`.
 
 ## How to build
 
+* To build a SOF file for the DE1-SoC: `make fpga`
 * To simulate all testbenches: `make sim`
 * To simulate a specific testbench called `MyTB` (see [Repository Structure](#repository-structure)): `make sim TB=MyTB`
 * To open the modelsim GUI for `MyTB`: `make gui TB=MyTB`
