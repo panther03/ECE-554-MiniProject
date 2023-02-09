@@ -62,12 +62,19 @@ module fetch (pc_inc_in, pc_inc_out, iaddr,
     // PC & EPC register //
     //////////////////////
 
-    wire [15:0] pc, epc;
+    reg [15:0] pc, epc;
 
     wire [15:0] pc_exc = Exc ? 16'h2 : (Rtn ? epc : (stall ? pc : pc_target));
 
-    reg16 iPC (.q(pc),.d(pc_exc),.clk(clk),.en(1'b1),.rst_n(rst_n));
-    reg16 iEPC (.q(epc),.d(Exc ? pc : epc),.clk(clk),.en(1'b1),.rst_n(rst_n));
+
+    always @(posedge clk, negedge rst_n)
+        if (!rst_n) begin
+            pc <= 0;
+            epc <= 0;
+        end else begin
+            pc <= pc_exc;
+            epc <= Exc ? pc : epc;
+        end
 
     assign iaddr = pc;
 
