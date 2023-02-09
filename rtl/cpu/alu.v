@@ -6,7 +6,8 @@ module alu (A, B, Op, Out, alu_err);
    output reg [15:0] Out;
    output reg alu_err;
 
-   wire [15:0] S, shft;
+   wire [16:0] S;
+   wire [15:0] shft;
    wire Cout;
 
    // Inversion logic for adder operand (used for subtract)
@@ -17,8 +18,9 @@ module alu (A, B, Op, Out, alu_err);
    assign inv_A = Op[3]&Op[2];
    assign A_inv = A ^ {16{inv_A}};
 
-
-   cla16 iCLA16(.A(A_inv),.B(B),.Cin(inv_A),.Cout(Cout),.S(S));
+   // Add 1 bit at the end so we can see the Cout result
+   assign S = {1'b0, A_inv} + {1'b0, B} + {16'h0, inv_A};
+   assign Cout = S[16];
 
    shifter iSHFT(.In(A),.Cnt(B[3:0]),.Op(Op[1:0]),.Out(shft));
 
@@ -32,8 +34,8 @@ module alu (A, B, Op, Out, alu_err);
    assign SLE = (~S[15] ^ Ofl);  
 
    always @* casex (Op)
-      4'b0000 : begin alu_err = 1'b0; Out = S; end
-      4'b0001 : begin alu_err = 1'b0; Out = Cout; end
+      4'b0000 : begin alu_err = 1'b0; Out = S[15:0]; end
+      4'b0001 : begin alu_err = 1'b0; Out = {15'h0, Cout}; end
       4'b0010 : begin alu_err = 1'b0; Out = A ^ B; end
       4'b0011 : begin alu_err = 1'b0; Out = A & ~B; end
       4'b01?? : begin alu_err = 1'b0; Out = shft; end
@@ -41,11 +43,11 @@ module alu (A, B, Op, Out, alu_err);
       4'b1001 : begin alu_err = 1'b0; Out = A; end
       4'b1010 : begin alu_err = 1'b0; Out = B; end
       4'b1011 : begin alu_err = 1'b0; Out = (A << 8) | B; end
-      4'b1100 : begin alu_err = 1'b0; Out = SEQ; end
-      4'b1101 : begin alu_err = 1'b0; Out = SLT; end
-      4'b1110 : begin alu_err = 1'b0; Out = SLE; end
-      4'b1111 : begin alu_err = 1'b0; Out = S; end
-      default: begin  alu_err = 1'b1; Out = 15'hx; end
+      4'b1100 : begin alu_err = 1'b0; Out = {15'h0, SEQ}; end
+      4'b1101 : begin alu_err = 1'b0; Out = {15'h0, SLT}; end
+      4'b1110 : begin alu_err = 1'b0; Out = {15'h0, SLE}; end
+      4'b1111 : begin alu_err = 1'b0; Out = S[15:0]; end
+      default: begin  alu_err = 1'b1; Out = 16'hx; end
    endcase
 
     

@@ -1,11 +1,10 @@
-module fetch (inst, pc_inc_in, pc_inc_out, iaddr,
+module fetch (pc_inc_in, pc_inc_out, iaddr,
               reg1, ofs, imm, stall, flush,
               JType, CondOp, Halt, Rtn, Exc,
               clk, rst_n, fetch_err);
 
 	input clk, rst_n;
     
-	input [15:0] inst;
     input [15:0] reg1, imm, ofs;
     input [15:0] pc_inc_in;
     input stall;
@@ -48,7 +47,7 @@ module fetch (inst, pc_inc_in, pc_inc_out, iaddr,
 
     assign addr_base = JType[1] ? pc_inc_in : reg1;
     assign addr_ofs = JType[0] ? imm : ofs;
-    cla16 iBR_ADD(.A(addr_base),.B(addr_ofs),.Cin(1'b0),.Cout(),.S(addr));
+    assign addr = addr_base + addr_ofs;
 
     reg [15:0] pc_target;
 
@@ -63,12 +62,19 @@ module fetch (inst, pc_inc_in, pc_inc_out, iaddr,
     // PC & EPC register //
     //////////////////////
 
-    wire [15:0] pc, epc;
+    reg [15:0] pc, epc;
 
     wire [15:0] pc_exc = Exc ? 16'h2 : (Rtn ? epc : (stall ? pc : pc_target));
 
-    reg16 iPC (.q(pc),.d(pc_exc),.clk(clk),.en(1'b1),.rst_n(rst_n));
-    reg16 iEPC (.q(epc),.d(Exc ? pc : epc),.clk(clk),.en(1'b1),.rst_n(rst_n));
+
+    always @(posedge clk, negedge rst_n)
+        if (!rst_n) begin
+            pc <= 0;
+            epc <= 0;
+        end else begin
+            pc <= pc_exc;
+            epc <= Exc ? pc : epc;
+        end
 
     assign iaddr = pc;
 
@@ -76,7 +82,7 @@ module fetch (inst, pc_inc_in, pc_inc_out, iaddr,
     // pc_inc (adder) logic //
     /////////////////////////
 
-	cla16 iADD_PC (.A(pc),.B(Halt ? 16'h0 : 16'h2),.Cin(1'b0),.Cout(),.S(pc_inc_out)); 
+	assign pc_inc_out = pc + (Halt ? 16'h0 : 16'h2);
 
 	// we don't consider an error case for fetch,
    	// so err is tied low.

@@ -1,33 +1,29 @@
-module dmem (clk, wr, en, addr, data_in, data_out);
+module dmem #(
+   parameter DMEM_DEPTH = 1
+) (
+   input                   clk,
+   input                   we_i,
+   input  [DMEM_DEPTH-1:0] addr_i,
+   input  [15:0]           wdata_i,
+   output [15:0]           rdata_o
+);
 
-   `include "mem_defs.vh"
-
-   input                   clk;
-   input                   wr;
-   input                   en;
-   input  [DMEM_DEPTH-1:0] addr;
-   input  [15:0]           data_in;
-   output [15:0]           data_out;
+   localparam DMEM_ENTRIES = 1 << DMEM_DEPTH;
 
    
-   reg [15:0] mem [(2**DMEM_DEPTH)-1:0];
-   reg [15:0] data_out_r;
+   reg [15:0] mem_r [DMEM_ENTRIES-1:0];
+   reg [15:0] rdata_r;
 
-   integer i = 0;
-
-   initial begin
-      for (i = 0; i < (2**DMEM_DEPTH); i = i + 1)
-         mem[i] = 0;
+   // Intel HDL Coding Styles, 14.1.7 "Simple Dual-Port, Dual-Clock Synchronous RAM"
+   // We read on negative edge becuase the 552 memory reads asyncronously
+   // We also write on negative edge because you have to write and read on the same edge
+   always @(negedge clk) begin
+      if (we_i) begin
+         mem_r[addr_i] <= wdata_i;
+      end
+      rdata_r <= mem_r[addr_i];
    end
 
-   always @(posedge clk) begin
-      if (en)
-         if (wr)
-            mem[addr] <= data_in;
-         else
-            data_out_r <= mem[addr];
-   end
-
-   assign data_out = data_out_r;
+   assign rdata_o = rdata_r;
 
 endmodule

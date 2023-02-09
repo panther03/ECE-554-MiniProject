@@ -1,5 +1,6 @@
-ASM_PROG ?= "" # TODO: add a default demo
+ASM_PROG ?= "mmioLoop.asm"
 FPGA_DEV ?= "de1_soc"
+TB ?= "" # no default
 
 FW_DIR = "fw/"
 SW_DIR = "sw/"
@@ -19,4 +20,22 @@ fpga: $(OUT_DIR) fw
 	@make -C $(FPGA_DIR)/$(FPGA_DEV)
 
 sim:
-	@python3 sim.py
+ifeq ($(TB),)
+	@python3 $(SW_DIR)/sim.py test
+else
+	@python3 $(SW_DIR)/sim.py test $(TB)
+endif
+
+gui:
+ifeq ($(TB),)
+	@python3 $(SW_DIR)/sim.py gui
+else
+	@python3 $(SW_DIR)/sim.py gui $(TB)
+endif
+
+proj:
+ifeq ($(TB),)
+	@python3 $(SW_DIR)/sim.py proj
+else
+	@python3 $(SW_DIR)/sim.py proj $(TB)
+endif
