@@ -1,4 +1,5 @@
 `timescale 1ns/100ps
+// WHOLE MODULE ASSUMES A 50MHZ CLOCK!!
 package spart_tb_tasks;
 
     localparam RX_WAIT = 1_000_000; // 1 million cycles as a large upper limit
@@ -6,6 +7,11 @@ package spart_tb_tasks;
     function bit [12:0] calculate_baud(input int baud_int);
         return $floor((50_000_000)/baud_int);
     endfunction
+
+    // the inverse of the above function
+    function int calculate_baud_bd(input bit [12:0] baud_db);
+        return baud_db * 50_000_000;
+    endfunction 
 
     // we are sending TO TX, not receiving TX from the other end
     task automatic send_uart_tx(ref clk, ref TX, input int baud_int, input [7:0] tx_data);
@@ -48,26 +54,20 @@ package spart_tb_tasks;
 
         // A UART transaction has started
         // Now we will wait the delay given by the baud rate, for each symbol
-        fork
-            begin: rx_timeout
-                // 10 because we have 8 bits + the remainder of a start and a stop
-                $display("Start waiting: %t", $time());
-                repeat (10 * baud_wait) @(posedge clk);
-                $display("ERR: RX transaction did not complete in time. %t", $time());
-                $stop();
+        for (int i = 0; i <= 8; i++) begin
+            repeat (baud_wait) @(posedge clk);
+            if (RX) begin
+                rx_data_temp[i] = 1'b1;
+            end else begin
+                rx_data_temp[i] = 1'b0;
             end
-            begin: rx
-                for (int i = 0; i <= 8; i++) begin
-                    repeat (baud_wait) @(posedge clk);
-                    if (RX) begin
-                        rx_data_temp[i] = 1'b1;
-                    end else begin
-                        rx_data_temp[i] = 1'b0;
-                    end
-                end
-                disable rx_timeout;
-            end
-        join
+        end
+        // Ignore stop
         rx_data = rx_data_temp[7:0];
     endtask //automatic
+
+    //task automatic spart_reg_read(ref clk, ref logic [7:0] db, ref db_we, ref iocs_n, ref iorw_n, ref logic [1:0] ioaddr );
+    //task automatic spart_reg_read(ref clk, ref spart_reg_bus b);
+        
+    //endtask //automatic
 endpackage
