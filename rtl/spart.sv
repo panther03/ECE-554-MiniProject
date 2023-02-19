@@ -39,7 +39,6 @@ module spart(
 
 
     logic [7:0] tx_data;
-    logic tx_done;
 
     logic new_data_ready;
     logic [7:0] rx_data;

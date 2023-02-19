@@ -12,7 +12,7 @@ localparam ADDR_DBL  = 2'b10;
 localparam ADDR_DBH  = 2'b11;
 
 localparam QUEUE_SIZE = 8;
-localparam STIM_QUEUE_SIZE = QUEUE_SIZE + (QUEUE_SIZE >> 1) + 1; // because we can hold one more entry in the tx_data before the queue is actually full
+localparam STIM_QUEUE_SIZE = QUEUE_SIZE + (QUEUE_SIZE >> 1) + 2; // because we can hold one more entry in the tx_data before the queue is actually full, and we do this two times
 
 interface spart_reg_bus (input clk);
     logic iocs_n;
@@ -20,12 +20,12 @@ interface spart_reg_bus (input clk);
     logic [1:0] ioaddr;
     logic [7:0] databus_out;
 
-    semaphore databus_lock = new (1);
+    // semaphore databus_lock = new (1);
 
     wire [7:0] databus = (iocs_n || !srb.iorw_n) ? databus_out : 8'hZ;
 
     task automatic spart_reg_write (input logic [1:0] addr, input logic [7:0] wdata);
-        databus_lock.get(1);
+//        databus_lock.get(1);
         iocs_n = 0;
         iorw_n = 0;
         ioaddr = addr;
@@ -33,11 +33,11 @@ interface spart_reg_bus (input clk);
         @(posedge clk);
         iocs_n = 1;
         iorw_n = 1;
-        databus_lock.put(1);
+//        databus_lock.put(1);
     endtask
 
     task automatic spart_reg_read (input logic [1:0] addr, output logic [7:0] rdata);
-        databus_lock.get(1);
+//        databus_lock.get(1);
         iocs_n = 0;
         iorw_n = 1;
         ioaddr = addr;
@@ -45,7 +45,7 @@ interface spart_reg_bus (input clk);
         rdata = databus;
         iocs_n = 1;
         iorw_n = 1;
-        databus_lock.put(1);
+//        databus_lock.put(1);
     endtask
 endinterface //spart_reg_bus
 
@@ -163,7 +163,7 @@ initial begin;
             for (both_fifo_ind = QUEUE_SIZE+1; both_fifo_ind < STIM_QUEUE_SIZE; both_fifo_ind++) begin
                 srb.spart_reg_write(ADDR_DBUF, tx_fifo_stim[both_fifo_ind]);
                 srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
-                assert_msg(srb_reg_temp[7:4] == STIM_QUEUE_SIZE-both_fifo_ind-1, "Status register tracks even after TX queue partially empties");
+                assert_msg(srb_reg_temp[7:4] == STIM_QUEUE_SIZE-both_fifo_ind-1, "Status register tracks while re-filling TX queue");
             end
             assert_msg(tx_q_full, "Full signal asserted when queue is re-filled");
         end
@@ -175,8 +175,15 @@ initial begin;
                 @(posedge clk);
                 srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
                 
-                assert_msg(srb_reg_temp[7:4] == tx_fifo_ind, "Status register tracks after transmitting entry");
-                if (srb_reg_temp[7:4] == QUEUE_SIZE << 1)
+                if (tx_fifo_ind <= QUEUE_SIZE >> 1) begin
+                    assert_msg(srb_reg_temp[7:4] == tx_fifo_ind, "Status register tracks after transmitting entry");
+                end else begin
+                    // math is because we re-filled it to half
+                    assert_msg(srb_reg_temp[7:4] == (tx_fifo_ind - (QUEUE_SIZE >> 1) - 1), "Status register tracks after transmitting entry from re-filled queue");
+                end
+
+                if (tx_fifo_ind == QUEUE_SIZE >> 1)
+                    // trigger the re-fill
                     tx_fifo_half_full = 1'b1;
             end
         end
