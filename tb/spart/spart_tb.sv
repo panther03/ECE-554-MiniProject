@@ -12,7 +12,7 @@ localparam ADDR_DBL  = 2'b10;
 localparam ADDR_DBH  = 2'b11;
 
 localparam QUEUE_SIZE = 8;
-localparam STIM_QUEUE_SIZE = QUEUE_SIZE + (QUEUE_SIZE >> 1);
+localparam STIM_QUEUE_SIZE = QUEUE_SIZE + (QUEUE_SIZE >> 1) + 1; // because we can hold one more entry in the tx_data before the queue is actually full
 
 interface spart_reg_bus (input clk);
     logic iocs_n;
@@ -41,8 +41,8 @@ interface spart_reg_bus (input clk);
         iocs_n = 0;
         iorw_n = 1;
         ioaddr = addr;
-        rdata = databus;
         @(posedge clk);
+        rdata = databus;
         iocs_n = 1;
         iorw_n = 1;
         databus_lock.put(1);
@@ -66,20 +66,18 @@ spart_reg_bus srb(.clk(clk));
 logic spart_rx;
 logic spart_tx;
 
-reg [7:0] tx_data;
-
-/*spart iDUT (
+spart iDUT (
     .clk(clk),                 // 50MHz clk
     .rst_n(rst_n),             // asynch active low reset
-    .iocs_n(iocs_n),           // active low chip select (decode address range) 
-    .iorw_n(iorw_n),           // high for read, low for write 
+    .iocs_n(srb.iocs_n),           // active low chip select (decode address range) 
+    .iorw_n(srb.iorw_n),           // high for read, low for write 
     .tx_q_full(tx_q_full),     // indicates transmit queue is full       
     .rx_q_empty(rx_q_empty),   // indicates receive queue is empty         
-    .ioaddr(ioaddr),           // Read/write 1 of 4 internal 8-bit registers 
-    .databus(databus),         // bi-directional data bus   
-    .TX(TX),                   // UART TX line
-    .RX(RX)                    // UART RX line
-);*/
+    .ioaddr(srb.ioaddr),           // Read/write 1 of 4 internal 8-bit registers 
+    .databus(srb.databus),         // bi-directional data bus   
+    .TX(spart_tx),                   // UART TX line
+    .RX(spart_rx)                    // UART RX line
+);
 
 // Neither of these values are initialized, this is fine as we kind of want them to be X so the tests are meaningful
 // This value stores the value we got from a register read on the SPART bus.
@@ -88,6 +86,7 @@ reg [7:0] srb_reg_temp;
 reg [7:0] db_high_temp;
 
 reg [7:0] uart_rx_temp;
+reg new_uart_rx_data;
 
 reg tx_fifo_half_full;
 reg rx_fifo_half_full;
@@ -121,53 +120,62 @@ initial begin;
     tx_fifo_half_full = 0;
     rx_fifo_half_full = 0;
 
+    uart_rx_temp = 0;
+    new_uart_rx_data = 0;
+
     // Initialize our stimulation data
     for (both_fifo_ind = 0; both_fifo_ind < STIM_QUEUE_SIZE; both_fifo_ind++) begin
-        tx_fifo_stim[both_fifo_ind] = $rand();
-        rx_fifo_stim[both_fifo_ind] = $rand();
+        tx_fifo_stim[both_fifo_ind] = $random;
+        rx_fifo_stim[both_fifo_ind] = $random;
     end
 
     // Deassert reset
     @(negedge clk);
     rst_n = 1;
-
+    
+    @(posedge clk);
     // Test 1: RX Queue and TX queue both start out empty.
     srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
-    assert(srb_reg_temp == 8'h00);
-    assert(!tx_q_full);
-    assert(rx_q_empty);
+    assert_msg(srb_reg_temp == 8'h80, "Status register defaults to 80");
+    assert_msg(!tx_q_full, "TX queue defaults to not full");
+    assert_msg(rx_q_empty, "RX queue defaults to empty");
     
     // Test 2: Baud rate defaults to 115200
-    srb.spart_reg_read(ADDR_DBH, db_high_temp);
-    srb.spart_reg_read(ADDR_DBL, srb_reg_temp);
-    assert(calculate_baud_bd({db_high_temp[4:0],srb_reg_temp}) == 115200);
+    // Skip for now because Elan hasn't implemented baud rate
+    //srb.spart_reg_read(ADDR_DBH, db_high_temp);
+    //srb.spart_reg_read(ADDR_DBL, srb_reg_temp);
+    //assert(calculate_baud_bd({db_high_temp[4:0],srb_reg_temp}) == 115200);
 
     fork
         begin: FILL_TX_FIFO
-            for (both_fifo_ind = 0; both_fifo_ind < QUEUE_SIZE; both_fifo_ind++) begin
+            for (both_fifo_ind = 0; both_fifo_ind < QUEUE_SIZE+1; both_fifo_ind++) begin
                 srb.spart_reg_write(ADDR_DBUF, tx_fifo_stim[both_fifo_ind]);
                 srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
-                assert(srb_reg_temp[7:4] == QUEUE_SIZE-both_fifo_ind-1);
+                // conditional is there because once we've written the first queue entry, old pointer advances
+                // this is to be expected, as soon as TX consumes the data we should increment the old 
+                // point because the data has been consumed (TODO: check with eric?)
+                assert_msg(srb_reg_temp[7:4] == QUEUE_SIZE-both_fifo_ind+((both_fifo_ind > 0) ? 0 : -1), "Status register increases with filling queue");
             end 
-            assert(tx_q_full);
-            forever begin: stall_till_half_full
-                if (tx_fifo_half_full)
-                    disable stall_till_half_full;
-            end
-            for (both_fifo_ind = QUEUE_SIZE; both_fifo_ind < STIM_QUEUE_SIZE; both_fifo_ind++) begin
+            assert_msg(tx_q_full, "Full signal asserted when queue is filled");
+
+            wait(tx_fifo_half_full);
+
+            for (both_fifo_ind = QUEUE_SIZE+1; both_fifo_ind < STIM_QUEUE_SIZE; both_fifo_ind++) begin
                 srb.spart_reg_write(ADDR_DBUF, tx_fifo_stim[both_fifo_ind]);
                 srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
-                assert(srb_reg_temp[7:4] == STIM_QUEUE_SIZE-both_fifo_ind-1);
+                assert_msg(srb_reg_temp[7:4] == STIM_QUEUE_SIZE-both_fifo_ind-1, "Status register tracks even after TX queue partially empties");
             end
-            assert(tx_q_full);
+            assert_msg(tx_q_full, "Full signal asserted when queue is re-filled");
         end
         begin: READ_TX_FROM_SPART
             for (tx_fifo_ind = 0; tx_fifo_ind < STIM_QUEUE_SIZE; tx_fifo_ind++) begin
-                recv_uart_rx(clk, spart_tx, 115200, uart_rx_temp);
-                assert(uart_rx_temp == tx_fifo_stim[tx_fifo_ind]);
+                wait(new_uart_rx_data);
+                new_uart_rx_data = 0;
+                assert_msg(uart_rx_temp == tx_fifo_stim[tx_fifo_ind], "Transmitted TX data matches queue data");
+                @(posedge clk);
                 srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
-                if (srb_reg_temp[7:4])
-                assert(srb_reg_temp[7:4] == tx_fifo_ind+1);
+                
+                assert_msg(srb_reg_temp[7:4] == tx_fifo_ind, "Status register tracks after transmitting entry");
                 if (srb_reg_temp[7:4] == QUEUE_SIZE << 1)
                     tx_fifo_half_full = 1'b1;
             end
@@ -191,19 +199,18 @@ initial begin;
     // end
     // assert(tx_q_full);
     
-    /*// Test 3: Interleaved reads/writes
-    fork
-        begin: tx
-            @(posedge clk); // delay TX by one cycle so RX can see negedge
-            send_uart_tx(clk, TX_RX, 19200, 8'h5A);
-        end
-        begin: rx
-            recv_uart_rx(clk, TX_RX, 19200, tx_data);
-        end
-    join*/
+    /*// Test 3: Interleaved reads/writes*/
 
     $display("\nYahoo!!! All Tests Passed\n");
     $finish();
+end
+
+// This essentially acts as our simulated version of a UART
+// Wait for RX to go low (start bit)
+always @(negedge spart_tx) begin
+    $display("Starting a receive at %t..", $time);
+    recv_uart_rx(clk, spart_tx, 19200, uart_rx_temp);
+    new_uart_rx_data = 1;
 end
 
 

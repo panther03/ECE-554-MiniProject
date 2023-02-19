@@ -16,10 +16,13 @@ import os.path
 import shutil
 from pathlib import Path
 
-def scan_rtl_files(tb_dir, toplevel):
+def scan_files(tb_dir, toplevel, manual_fileset):
     all_files = []
-    for (root,dirs,files) in os.walk("rtl/"):
-        all_files += [os.path.relpath(root+"/"+f,tb_dir) for f in files if f.endswith(".v") or f.endswith(".sv")]
+    if manual_fileset:
+        all_files += [os.path.relpath(f,tb_dir) for f in manual_fileset]
+    else:
+        for (root,dirs,files) in os.walk("rtl/"):
+            all_files += [os.path.relpath(root+"/"+f,tb_dir) for f in files if f.endswith(".v") or f.endswith(".sv")]
     top_file = ""
     for (root,dirs,files) in os.walk(tb_dir):    
         for f in files:
@@ -33,7 +36,7 @@ def scan_rtl_files(tb_dir, toplevel):
         all_files.append(top_file)
     return all_files
 
-def proj(tb_dir, tb_name, toplevel):
+def proj(tb_dir, tb_name, toplevel, manual_fileset):
 
     modelsim_junk = [f"{tb_name}.mpf", f"{tb_name}.cr.mti", "transcript", "modelsim.ini"]
     for junk in modelsim_junk:
@@ -44,7 +47,7 @@ def proj(tb_dir, tb_name, toplevel):
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     
-    files = scan_rtl_files(tb_dir, toplevel)
+    files = scan_files(tb_dir, toplevel, manual_fileset)
     file_commands = " ".join([f"project addfile {f};" for f in files])
     vsim_command = f"\
         vsim -c -do \"project new . {tb_name}; project open {tb_name}; {file_commands}; quit\"\
@@ -103,13 +106,12 @@ def run_flow(flow, tb, tb_cfg):
         subprocess.run(f"python3 sw/assemble.py fw/{fw_file} -o out/out.hex", shell=True, check=True, capture_output=True)
 
     top = tb_cfg["top"]
-    if flow == "proj":
-        proj(tb_dir, tb, top)
-    elif flow == "gui":
-        proj(tb_dir, tb, top)
+    manual_fileset = tb_cfg.get("files")
+    # assume proj by default
+    proj(tb_dir, tb, top, manual_fileset)
+    if flow == "gui":
         gui(tb_dir, tb)
-    else: # flow == "test"
-        proj(tb_dir, tb, top)
+    elif flow == "test":
         return test(tb_dir, tb, top)
 
 

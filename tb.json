@@ -4,6 +4,12 @@
         "fw": "MiniLab0.asm"
     },
     "spart": {
-        "top": "spart_tb"
+        "top": "spart_tb",
+        "files": [
+            "rtl/spart.sv",
+            "rtl/UART_rx.sv",
+            "rtl/UART_tx.sv",
+            "rtl/queue.sv"
+        ]
     }
 }

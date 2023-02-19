@@ -10,13 +10,27 @@ module queue (
    reg [7:0] mem [7:0];
    reg [7:0] rdata_r;
 
+   integer i;
+
+   initial begin
+      for (i = 0; i < 8; i += 1) begin
+         mem[i] <= 8'h0;
+      end
+   end
+
    // Intel HDL Coding Styles, 14.1.7 "Simple Dual-Port, Dual-Clock Synchronous RAM"
    always @(negedge clk) begin
       if (enable) begin
          mem[waddr] <= wdata;
       end
-      rdata_r <= mem[raddr];
+      // BYPASS LOGIC NECESSARY??
+      //if (raddr == waddr) begin
+      // rdata_r <= wdata;
+      //end else begin
+         rdata_r <= mem[raddr];
+      //end
    end
+
 
    assign rdata = rdata_r;
 

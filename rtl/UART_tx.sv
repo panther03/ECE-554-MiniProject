@@ -1,8 +1,8 @@
 module UART_tx (
     input clk, rst_n,
-    input trmt,
+    input queue_not_empty,
     input [7:0] tx_data,
-    output reg tx_done,
+    output reg tx_started,
     output reg TX
 );
 
@@ -16,7 +16,7 @@ logic unsigned [11:0] baud_cnt;
 logic [8:0] tx_shift_reg;
 
 // SM/control signals
-logic init, shift, transmitting, set_done;
+logic init, shift, transmitting;
 
 // bit counter (counts to 10), increments after every bit
 always_ff @(posedge clk) 
@@ -49,18 +49,16 @@ always_ff @(posedge clk,negedge rst_n)
 // synchronous SR flop logic for tx_done signal
 always_ff @(posedge clk,negedge rst_n)
     if (!rst_n)
-        tx_done <= 1'b0;
+        tx_started <= 1'b0;
     else if (init)
-        tx_done <= 1'b0;
-    else if (set_done)
-        tx_done <= 1'b1;
+        tx_started <= 1'b1;
     else
-        tx_done <= tx_done; 
+        tx_started <= 1'b0;
 
 // TX is LSB of shifting register
 assign TX = tx_shift_reg[0];
 // shift goes high when count has reached 2604
-assign shift = baud_cnt >= BAUD_CNT_REF;
+assign shift = baud_cnt >= BAUD_CNT_REF - 1;
 
 // STATE MACHINE LOGIC
 
@@ -79,13 +77,11 @@ always_comb begin
     nxt_state = IDLE;
     init = 0;
     transmitting = 0;
-    set_done = 0;
 
     case (state) 
         IDLE:
-        // wait till external trmt signal goes high,
-        // then we can start transmitting
-        if (trmt) begin
+        // as long as the queue is not empty we will keep consuming
+        if (queue_not_empty) begin
             nxt_state = TRAN;
             init = 1;
         end
@@ -94,7 +90,6 @@ always_comb begin
         // then transmission is over and we go to IDLE
         if (bit_cnt == 4'hA) begin
             nxt_state = IDLE;
-            set_done = 1;
         end else begin
             nxt_state = TRAN;
             transmitting = 1;
