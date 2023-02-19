@@ -68,7 +68,6 @@ module spart(
 
     UART_rx uart_rx (
     .clk(clk), .rst_n(rst_n), // input
-    .clr_rdy(1'b0), // input
     .RX(RX), // input
     .rx_data(rx_data), // output
     .rdy(new_data_ready) // output

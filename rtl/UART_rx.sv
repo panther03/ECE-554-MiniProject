@@ -1,6 +1,5 @@
 module UART_rx (
     input clk, rst_n,
-    input clr_rdy,
     input RX,
     output [7:0] rx_data,
     output reg rdy
@@ -64,12 +63,10 @@ always_ff @(posedge clk,negedge rst_n)
 always_ff @(posedge clk,negedge rst_n)
     if (!rst_n)
         rdy <= 1'b0;
-    else if (start || clr_rdy)
-        rdy <= 1'b0;
     else if (set_done)
         rdy <= 1'b1;
     else
-        rdy <= rdy; 
+        rdy <= 1'b0; 
 
 // shift goes high when baud cnts down from 1302 to 0
 assign shift = (baud_cnt == 0);

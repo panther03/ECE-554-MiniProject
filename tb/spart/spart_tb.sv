@@ -154,7 +154,7 @@ initial begin;
                 // conditional is there because once we've written the first queue entry, old pointer advances
                 // this is to be expected, as soon as TX consumes the data we should increment the old 
                 // point because the data has been consumed (TODO: check with eric?)
-                assert_msg(srb_reg_temp[7:4] == QUEUE_SIZE-both_fifo_ind+((both_fifo_ind > 0) ? 0 : -1), "Status register increases with filling queue");
+                assert_msg(srb_reg_temp[7:4] == QUEUE_SIZE-both_fifo_ind+((both_fifo_ind > 0) ? 0 : -1), "Status register (TX) increases with filling queue");
             end 
             assert_msg(tx_q_full, "Full signal asserted when queue is filled");
 
@@ -163,7 +163,7 @@ initial begin;
             for (both_fifo_ind = QUEUE_SIZE+1; both_fifo_ind < STIM_QUEUE_SIZE; both_fifo_ind++) begin
                 srb.spart_reg_write(ADDR_DBUF, tx_fifo_stim[both_fifo_ind]);
                 srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
-                assert_msg(srb_reg_temp[7:4] == STIM_QUEUE_SIZE-both_fifo_ind-1, "Status register tracks while re-filling TX queue");
+                assert_msg(srb_reg_temp[7:4] == STIM_QUEUE_SIZE-both_fifo_ind-1, "Status register (TX) tracks while re-filling TX queue");
             end
             assert_msg(tx_q_full, "Full signal asserted when queue is re-filled");
         end
@@ -176,10 +176,10 @@ initial begin;
                 srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
                 
                 if (tx_fifo_ind <= QUEUE_SIZE >> 1) begin
-                    assert_msg(srb_reg_temp[7:4] == tx_fifo_ind, "Status register tracks after transmitting entry");
+                    assert_msg(srb_reg_temp[7:4] == tx_fifo_ind, "Status register (TX) tracks after transmitting entry");
                 end else begin
                     // math is because we re-filled it to half
-                    assert_msg(srb_reg_temp[7:4] == (tx_fifo_ind - (QUEUE_SIZE >> 1) - 1), "Status register tracks after transmitting entry from re-filled queue");
+                    assert_msg(srb_reg_temp[7:4] == (tx_fifo_ind - (QUEUE_SIZE >> 1) - 1), "Status register (TX) tracks after transmitting entry from re-filled queue");
                 end
 
                 if (tx_fifo_ind == QUEUE_SIZE >> 1)
@@ -187,15 +187,15 @@ initial begin;
                     tx_fifo_half_full = 1'b1;
             end
         end
-        // begin: WRITE_RX_TO_SPART
-        //     repeat (50) @(posedge clk); // delay a little to avoid reg reads colliding
-        //     for (rx_fifo_ind = 0; rx_fifo_ind < QUEUE_SIZE; rx_fifo_ind++) begin
-        //         send_uart_tx(clk, spart_rx, 115200, rx_fifo_stim[rx_fifo_ind]);
-        //         srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
-        //         assert(srb_reg_temp[3:0] == rx_fifo_ind+1);
-        //         assert(!rx_q_empty);
-        //     end
-        // end
+        begin: WRITE_RX_TO_SPART
+            repeat (100) @(posedge clk); // delay a little to avoid reg reads colliding
+            for (rx_fifo_ind = 0; rx_fifo_ind < QUEUE_SIZE; rx_fifo_ind++) begin
+                send_uart_tx(clk, spart_rx, 19200, rx_fifo_stim[rx_fifo_ind]);
+                srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
+                assert_msg(srb_reg_temp[3:0] == rx_fifo_ind+1, "Status register (RX) tracks after sending UART data");
+                assert_msg(!rx_q_empty, "Empty signal is not high while data in RX queue");
+            end
+        end
     join
 
     // The RX queue should be full. we will from it and check it.
