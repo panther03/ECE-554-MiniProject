@@ -16,9 +16,10 @@ package spart_tb_tasks;
     // we are sending TO TX, not receiving TX from the other end
     task automatic send_uart_tx(ref clk, ref TX, input int baud_int, input [7:0] tx_data);
         int baud_wait = calculate_baud(baud_int);
-        bit [9:0] tx_data_temp = {1'b0, tx_data, 1'b1}; // start and stop
+        bit [9:0] tx_data_temp = {1'b1, tx_data, 1'b0}; // start and stop
+        $display("send_uart_tx called @ time=%t", $time());
         // Just to wait for the start bit
-        for (int i = 9; i >= 0; i--) begin
+        for (int i = 0; i <= 9; i++) begin
             if (tx_data_temp[i]) begin
                 $display("Setting TX = 1 @ %t", $time());
                 TX = 1;
@@ -63,16 +64,16 @@ package spart_tb_tasks;
             repeat (baud_wait) @(posedge clk);
             if (RX) begin
                 rx_data_temp[i] = 1'b1;
-                $display("new byte 1 %t", $time);
+                $display("new bit 1 %t", $time);
             end else begin
                 rx_data_temp[i] = 1'b0;
-                $display("new byte 0 %t", $time);
+                $display("new bit 0 %t", $time);
             end
         end
 
         // Wait for the transaction to completely end
         repeat (baud_wait_half + 1) @(posedge clk);
-        $display("ending shit %t", $time);
+        $display("ending byte %t", $time);
 
         // Ignore stop
         rx_data = rx_data_temp[7:0];
