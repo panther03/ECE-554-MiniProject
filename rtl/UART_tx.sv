@@ -7,16 +7,8 @@ module UART_tx (
     output reg TX
 );
 
-// set baud rate as localparams
-localparam BAUD_RATE = 19200;
-localparam CLK = 50000000;
-logic [16:0] BAUD_CNT_REF_;
-logic [16:0] BAUD_CNT_REF;
-assign BAUD_CNT_REF_ = CLK/baud;
-assign BAUD_CNT_REF = CLK/BAUD_CNT_REF_;
-
 logic [3:0] bit_cnt;
-logic unsigned [11:0] baud_cnt;
+logic unsigned [12:0] baud_cnt;
 logic [8:0] tx_shift_reg;
 
 // SM/control signals
@@ -30,12 +22,12 @@ always_ff @(posedge clk)
         default : bit_cnt <= 3'h0; // 10 or 11
     endcase
 
-// counts from 0 to 2604
+// counts from baud to 0
 always_ff @(posedge clk) 
     case ({init|shift,transmitting})
         2'b00 : baud_cnt <= baud_cnt;
-        2'b01 : baud_cnt <= baud_cnt + 1;
-        default : baud_cnt <= 3'h0; // 10 or 11
+        2'b01 : baud_cnt <= baud_cnt - 1;
+        default : baud_cnt <= baud; // 10 or 11
     endcase
 
 // initialize as tx_data with a zero at the end for start of transmission
@@ -61,8 +53,8 @@ always_ff @(posedge clk,negedge rst_n)
 
 // TX is LSB of shifting register
 assign TX = tx_shift_reg[0];
-// shift goes high when count has reached 2604
-assign shift = baud_cnt >= BAUD_CNT_REF - 1;
+// shift goes high when count has reached 0
+assign shift = baud_cnt == 0;
 
 // STATE MACHINE LOGIC
 

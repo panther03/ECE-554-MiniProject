@@ -21,17 +21,9 @@ always_ff @(posedge clk,negedge rst_n)
 
 assign RX_ms = RX_flop2;
 
-// set baud rate as localparams
-localparam BAUD_RATE = 19200;
-localparam CLK = 50000000;
-logic [16:0] BAUD_CNT_REF_;
-logic [16:0] BAUD_CNT_REF;
-assign BAUD_CNT_REF_ = CLK/baud;
-assign BAUD_CNT_REF = CLK/BAUD_CNT_REF_;
-
 
 logic [3:0] bit_cnt;
-logic unsigned [11:0] baud_cnt;
+logic unsigned [12:0] baud_cnt;
 logic [8:0] rx_shift_reg;
 
 // SM/control signals
@@ -45,13 +37,14 @@ always_ff @(posedge clk)
         default : bit_cnt <= 4'h0; // 10 or 11
     endcase
     
-// count bauds down from 2604/2 = 1302 to 0 initially, then
-// set back to 2604 for rest of transmission cycle
+// count bauds down from baud/2 to 0 initially, then
+// set back to baud for rest of transmission cycle
+// this is so we are always reading a bit in the middle of the cycle
 always_ff @(posedge clk) 
     case ({start|shift,receiving})
         2'b00 : baud_cnt <= baud_cnt;
         2'b01 : baud_cnt <= baud_cnt - 1;
-        default : baud_cnt <= (start ? (BAUD_CNT_REF / 2) : BAUD_CNT_REF); // 10 or 11
+        default : baud_cnt <= (start ? ({1'b0, baud[12:1]}) : baud); // 10 or 11 - divide by 2 if start set
     endcase
 
 // shift in new bits from RX until a byte is formed
@@ -73,7 +66,7 @@ always_ff @(posedge clk,negedge rst_n)
     else
         rdy <= 1'b0; 
 
-// shift goes high when baud cnts down from 1302 to 0
+// shift goes high when baud cnts down to 0
 assign shift = (baud_cnt == 0);
 // least significant 8 bits
 assign rx_data = rx_shift_reg[7:0];

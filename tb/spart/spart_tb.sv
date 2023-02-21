@@ -1,5 +1,3 @@
-// To be run with fw/MiniLab0.asm
-
 `timescale 1ns/100ps
 module spart_tb ();
 
@@ -21,12 +19,9 @@ interface spart_reg_bus (input clk);
     logic [1:0] ioaddr;
     logic [7:0] databus_out;
 
-    // semaphore databus_lock = new (1);
-
     wire [7:0] databus = (iocs_n || !srb.iorw_n) ? databus_out : 8'hZ;
 
     task automatic spart_reg_write (input logic [1:0] addr, input logic [7:0] wdata);
-//        databus_lock.get(1);
         iocs_n = 0;
         iorw_n = 0;
         ioaddr = addr;
@@ -34,11 +29,9 @@ interface spart_reg_bus (input clk);
         @(posedge clk);
         iocs_n = 1;
         iorw_n = 1;
-//        databus_lock.put(1);
     endtask
 
     task automatic spart_reg_read (input logic [1:0] addr, output logic [7:0] rdata);
-//        databus_lock.get(1);
         iocs_n = 0;
         iorw_n = 1;
         ioaddr = addr;
@@ -46,23 +39,16 @@ interface spart_reg_bus (input clk);
         rdata = databus;
         iocs_n = 1;
         iorw_n = 1;
-//        databus_lock.put(1);
     endtask
 endinterface //spart_reg_bus
 
 reg clk;
 reg rst_n;
 
-//reg iocs_n;
-//reg iorw_n;
-
 wire tx_q_full;
 wire rx_q_empty;
 
-//reg [1:0] ioaddr;
-//reg [7:0] stim_databus;
 spart_reg_bus srb(.clk(clk));
-
 
 logic spart_rx;
 logic spart_tx;
@@ -70,21 +56,21 @@ logic spart_tx;
 spart iDUT (
     .clk(clk),                 // 50MHz clk
     .rst_n(rst_n),             // asynch active low reset
-    .iocs_n(srb.iocs_n),           // active low chip select (decode address range) 
-    .iorw_n(srb.iorw_n),           // high for read, low for write 
+    .iocs_n(srb.iocs_n),       // active low chip select (decode address range) 
+    .iorw_n(srb.iorw_n),       // high for read, low for write 
     .tx_q_full(tx_q_full),     // indicates transmit queue is full       
     .rx_q_empty(rx_q_empty),   // indicates receive queue is empty         
-    .ioaddr(srb.ioaddr),           // Read/write 1 of 4 internal 8-bit registers 
-    .databus(srb.databus),         // bi-directional data bus   
-    .TX(spart_tx),                   // UART TX line
-    .RX(spart_rx)                    // UART RX line
+    .ioaddr(srb.ioaddr),       // Read/write 1 of 4 internal 8-bit registers 
+    .databus(srb.databus),     // bi-directional data bus   
+    .TX(spart_tx),             // UART TX line
+    .RX(spart_rx)              // UART RX line
 );
 
 // Neither of these values are initialized, this is fine as we kind of want them to be X so the tests are meaningful
 // This value stores the value we got from a register read on the SPART bus.
 reg [7:0] srb_reg_temp;
-// so we can use both high & low
-reg [7:0] db_high_temp;
+// store the whole databuffer so we can also have high & low
+reg [16:0] db_temp;
 
 reg [7:0] uart_rx_temp;
 reg new_uart_rx_data;
@@ -92,14 +78,15 @@ reg new_uart_rx_data;
 reg tx_fifo_half_full;
 reg rx_fifo_half_full;
 
+// array to hold our stimulus data to fill the queue with
 reg [7:0] tx_fifo_stim [TX_STIM_QUEUE_SIZE-1:0];
 reg [7:0] rx_fifo_stim [STIM_QUEUE_SIZE-1:0];
 
-// we use this one when filling or emptying the fifos
+// we use these when filling or emptying the fifos
 integer tx_fill_fifo_ind;
 integer rx_empty_fifo_ind; 
 
-// we inrcement this one over the course of the uart reads and writes
+// we increment these over the course of the uart reads and writes
 integer tx_fifo_ind;
 integer rx_fifo_ind;
 
@@ -139,28 +126,38 @@ initial begin;
     rst_n = 1;
     
     @(posedge clk);
-    // Test 1: RX Queue and TX queue both start out empty.
+    /////////////////////////////////////////////////////////
+    // Test 1: RX Queue and TX queue both start out empty //
+    ///////////////////////////////////////////////////////
     srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
     assert_msg(srb_reg_temp == 8'h80, "Status register defaults to 80");
     assert_msg(!tx_q_full, "TX queue defaults to not full");
     assert_msg(rx_q_empty, "RX queue defaults to empty");
     
-    // Test 2: Baud rate defaults to 115200
-    srb.spart_reg_read(ADDR_DBH, db_high_temp);
-    srb.spart_reg_read(ADDR_DBL, srb_reg_temp);
-    $display("Baud Rate: %d", calculate_baud_bd(({db_high_temp[4:0],srb_reg_temp})));
-    assert_msg(~calculate_baud_bd(({db_high_temp[4:0],srb_reg_temp}) == 115207), "Baud rate set to 115200");
-
+    ///////////////////////////////////////////
+    // Test 2: Baud rate defaults to 115200 //
+    /////////////////////////////////////////
+    srb.spart_reg_read(ADDR_DBH, db_temp[15:8]);
+    srb.spart_reg_read(ADDR_DBL, db_temp[7:0]);
+    assert_msg(calculate_baud(115200) == db_temp[12:0], "Baud rate defaults to 115200");
+    
+    /////////////////////////////////////////////////
+    // Test 3: Verify we can write to DB register //
+    ///////////////////////////////////////////////
     // Set baud rate to 19200
-    srb.spart_reg_write(ADDR_DBL, 8'b00101100);
-    srb.spart_reg_write(ADDR_DBH, 5'b01010);
+    db_temp = calculate_baud(19200);
+    srb.spart_reg_write(ADDR_DBH, db_temp[15:8]);
+    srb.spart_reg_write(ADDR_DBL, db_temp[7:0]);
+    db_temp = 0;
 
     // Check new baud rate
-    srb.spart_reg_read(ADDR_DBH, db_high_temp);
-    srb.spart_reg_read(ADDR_DBL, srb_reg_temp);
-    $display("Baud Rate: %d", calculate_baud_bd(({db_high_temp[4:0],srb_reg_temp})));
+    srb.spart_reg_read(ADDR_DBH, db_temp[15:8]);
+    srb.spart_reg_read(ADDR_DBL, db_temp[7:0]);
+    assert_msg(calculate_baud(19200) == db_temp[12:0], "Baud rate set to 19200");
 
-
+    ///////////////////////////////////////
+    // Test 4: Interleaved reads/writes //
+    /////////////////////////////////////
     fork
         begin: FILL_TX_FIFO
             for (tx_fill_fifo_ind = 0; tx_fill_fifo_ind <= QUEUE_SIZE; tx_fill_fifo_ind++) begin
@@ -205,7 +202,7 @@ initial begin;
         begin: WRITE_RX_TO_SPART
             repeat (100) @(posedge clk); // delay a little to avoid reg reads colliding
             for (rx_fifo_ind = 0; rx_fifo_ind < STIM_QUEUE_SIZE; rx_fifo_ind++) begin
-                send_uart_tx(clk, spart_rx, 19201, rx_fifo_stim[rx_fifo_ind]);
+                send_uart_tx(clk, spart_rx, 19200, rx_fifo_stim[rx_fifo_ind]);
                 srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
                 if (rx_fifo_ind < QUEUE_SIZE >> 1) begin
                     assert_msg(srb_reg_temp[3:0] == rx_fifo_ind+1, "Status register (RX) tracks after sending UART data");
@@ -247,7 +244,6 @@ initial begin;
     // end
     // assert(tx_q_full);
     
-    /*// Test 3: Interleaved reads/writes*/
 
     $display("\nYahoo!!! All Tests Passed\n");
     $finish();
@@ -257,7 +253,7 @@ end
 // Wait for RX to go low (start bit)
 always @(negedge spart_tx) begin
     $display("Starting a receive at %t..", $time);
-    recv_uart_rx(clk, spart_tx, 19201, uart_rx_temp);
+    recv_uart_rx(clk, spart_tx, 19200, uart_rx_temp);
     new_uart_rx_data = 1;
 end
 
