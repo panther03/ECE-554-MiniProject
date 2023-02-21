@@ -55,7 +55,7 @@ module spart(
     logic [12:0]DB;
     always_ff @(posedge clk,negedge rst_n)
     if (!rst_n) 
-        DB <= 0;
+        DB <= 13'h01B2;
     else if (divbuffer_l_reg_read) begin
         DB[7:0] <= databus_in;
         DB[12:8] <= DB[12:8];
@@ -69,6 +69,7 @@ module spart(
     UART_rx uart_rx (
     .clk(clk), .rst_n(rst_n), // input
     .RX(RX), // input
+    .baud(DB), // input
     .rx_data(rx_data), // output
     .rdy(new_data_ready) // output
     );
@@ -78,6 +79,7 @@ module spart(
     .clk(clk), .rst_n(rst_n), // input
     .queue_not_empty(tx_q_empty_n), // input
     .tx_data(tx_data), // input
+    .baud(DB), // input
     .tx_started(tx_started), // output
     .TX(TX) // output
     );

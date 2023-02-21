@@ -1,6 +1,7 @@
 module UART_rx (
     input clk, rst_n,
     input RX,
+    input [12:0] baud,
     output [7:0] rx_data,
     output reg rdy
 );
@@ -23,7 +24,11 @@ assign RX_ms = RX_flop2;
 // set baud rate as localparams
 localparam BAUD_RATE = 19200;
 localparam CLK = 50000000;
-localparam BAUD_CNT_REF = CLK/BAUD_RATE;
+logic [16:0] BAUD_CNT_REF_;
+logic [16:0] BAUD_CNT_REF;
+assign BAUD_CNT_REF_ = CLK/baud;
+assign BAUD_CNT_REF = CLK/BAUD_CNT_REF_;
+
 
 logic [3:0] bit_cnt;
 logic unsigned [11:0] baud_cnt;

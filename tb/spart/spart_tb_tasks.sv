@@ -10,7 +10,7 @@ package spart_tb_tasks;
 
     // the inverse of the above function
     function int calculate_baud_bd(input bit [12:0] baud_db);
-        return baud_db * 50_000_000;
+        return 50_000_000 / baud_db;
     endfunction 
 
     // we are sending TO TX, not receiving TX from the other end

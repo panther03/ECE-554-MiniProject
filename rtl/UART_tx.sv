@@ -2,6 +2,7 @@ module UART_tx (
     input clk, rst_n,
     input queue_not_empty,
     input [7:0] tx_data,
+    input [12:0] baud,
     output reg tx_started,
     output reg TX
 );
@@ -9,7 +10,10 @@ module UART_tx (
 // set baud rate as localparams
 localparam BAUD_RATE = 19200;
 localparam CLK = 50000000;
-localparam BAUD_CNT_REF = CLK/BAUD_RATE;
+logic [16:0] BAUD_CNT_REF_;
+logic [16:0] BAUD_CNT_REF;
+assign BAUD_CNT_REF_ = CLK/baud;
+assign BAUD_CNT_REF = CLK/BAUD_CNT_REF_;
 
 logic [3:0] bit_cnt;
 logic unsigned [11:0] baud_cnt;

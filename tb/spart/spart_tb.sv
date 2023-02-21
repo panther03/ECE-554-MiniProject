@@ -146,10 +146,20 @@ initial begin;
     assert_msg(rx_q_empty, "RX queue defaults to empty");
     
     // Test 2: Baud rate defaults to 115200
-    // Skip for now because Elan hasn't implemented baud rate
-    //srb.spart_reg_read(ADDR_DBH, db_high_temp);
-    //srb.spart_reg_read(ADDR_DBL, srb_reg_temp);
-    //assert(calculate_baud_bd({db_high_temp[4:0],srb_reg_temp}) == 115200);
+    srb.spart_reg_read(ADDR_DBH, db_high_temp);
+    srb.spart_reg_read(ADDR_DBL, srb_reg_temp);
+    $display("Baud Rate: %d", calculate_baud_bd(({db_high_temp[4:0],srb_reg_temp})));
+    assert_msg(~calculate_baud_bd(({db_high_temp[4:0],srb_reg_temp}) == 115207), "Baud rate set to 115200");
+
+    // Set baud rate to 19200
+    srb.spart_reg_write(ADDR_DBL, 8'b00101100);
+    srb.spart_reg_write(ADDR_DBH, 5'b01010);
+
+    // Check new baud rate
+    srb.spart_reg_read(ADDR_DBH, db_high_temp);
+    srb.spart_reg_read(ADDR_DBL, srb_reg_temp);
+    $display("Baud Rate: %d", calculate_baud_bd(({db_high_temp[4:0],srb_reg_temp})));
+
 
     fork
         begin: FILL_TX_FIFO
@@ -195,7 +205,7 @@ initial begin;
         begin: WRITE_RX_TO_SPART
             repeat (100) @(posedge clk); // delay a little to avoid reg reads colliding
             for (rx_fifo_ind = 0; rx_fifo_ind < STIM_QUEUE_SIZE; rx_fifo_ind++) begin
-                send_uart_tx(clk, spart_rx, 19200, rx_fifo_stim[rx_fifo_ind]);
+                send_uart_tx(clk, spart_rx, 19201, rx_fifo_stim[rx_fifo_ind]);
                 srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
                 if (rx_fifo_ind < QUEUE_SIZE >> 1) begin
                     assert_msg(srb_reg_temp[3:0] == rx_fifo_ind+1, "Status register (RX) tracks after sending UART data");
@@ -247,7 +257,7 @@ end
 // Wait for RX to go low (start bit)
 always @(negedge spart_tx) begin
     $display("Starting a receive at %t..", $time);
-    recv_uart_rx(clk, spart_tx, 19200, uart_rx_temp);
+    recv_uart_rx(clk, spart_tx, 19201, uart_rx_temp);
     new_uart_rx_data = 1;
 end
 
