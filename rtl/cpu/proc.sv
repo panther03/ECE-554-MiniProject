@@ -8,6 +8,7 @@ module proc (
    // Data memory signals
    output [15:0] daddr_o,
    output        we_o,
+   output        re_o,
    output [15:0] data_proc_to_mem_o,
    input  [15:0] data_mem_to_proc_i,
    // Error and Halt status,
@@ -94,6 +95,7 @@ module proc (
    ////////////////////////////
 
    logic EX_MEM_ctrl_RegWrite_in, EX_MEM_ctrl_RegWrite_out;
+   logic EX_MEM_ctrl_MemRead_in,  EX_MEM_ctrl_MemRead_out;
    logic EX_MEM_ctrl_MemWrite_in, EX_MEM_ctrl_MemWrite_out;
    logic EX_MEM_ctrl_MemToReg_in, EX_MEM_ctrl_MemToReg_out;
 
@@ -102,12 +104,6 @@ module proc (
    logic [15:0] EX_MEM_alu_out_in,  EX_MEM_alu_out_out;
    logic [15:0] EX_MEM_reg2_in, EX_MEM_reg2_out;
    logic [2:0] EX_MEM_writesel_in, EX_MEM_writesel_out;
-
-   /////////////////////////
-   // memory block wires //
-   ///////////////////////
-
-   wire [15:0] mem_out;
 
    //////////////////////////////
    // MEM_WB transition wires //
@@ -288,6 +284,7 @@ module proc (
 
    assign EX_MEM_ctrl_RegWrite_in = ID_EX_ctrl_RegWrite_out;
    assign EX_MEM_ctrl_MemWrite_in = ID_EX_ctrl_MemWrite_out;
+   assign EX_MEM_ctrl_MemRead_in  = ID_EX_ctrl_MemRead_out;
    assign EX_MEM_ctrl_MemToReg_in = ID_EX_ctrl_MemToReg_out;
 
    assign EX_MEM_ctrl_Halt_in = ID_EX_ctrl_Halt_out;
@@ -299,6 +296,7 @@ module proc (
    always @(posedge clk, negedge rst_n)
       if (!rst_n) begin
          EX_MEM_ctrl_RegWrite_out <= 0;
+         EX_MEM_ctrl_MemRead_out  <= 0;
          EX_MEM_ctrl_MemWrite_out <= 0;
          EX_MEM_ctrl_MemToReg_out <= 0;
          EX_MEM_alu_out_out <= 0;
@@ -307,6 +305,7 @@ module proc (
          EX_MEM_ctrl_Halt_out <= 0;
       end else begin
          EX_MEM_ctrl_RegWrite_out <= EX_MEM_ctrl_RegWrite_in;
+         EX_MEM_ctrl_MemRead_out  <= EX_MEM_ctrl_MemRead_in;
          EX_MEM_ctrl_MemWrite_out <= EX_MEM_ctrl_MemWrite_in;
          EX_MEM_ctrl_MemToReg_out <= EX_MEM_ctrl_MemToReg_in;
          EX_MEM_alu_out_out <= EX_MEM_alu_out_in;
@@ -322,9 +321,9 @@ module proc (
    // this has been moved outside of proc.v!
 
    assign daddr_o = EX_MEM_alu_out_out;
-   assign mem_out = data_mem_to_proc_i;
    assign data_proc_to_mem_o = EX_MEM_reg2_out;
    assign we_o = EX_MEM_ctrl_MemWrite_out;
+   assign re_o = EX_MEM_ctrl_MemRead_out;
 
    ////////////////////////
    // MEM/WB transition //
@@ -335,7 +334,7 @@ module proc (
    assign MEM_WB_ctrl_Halt_in = EX_MEM_ctrl_Halt_out;
 
    assign MEM_WB_alu_out_in = EX_MEM_alu_out_out;
-   assign MEM_WB_mem_out_in = mem_out;
+   assign MEM_WB_mem_out_in = data_mem_to_proc_i;
    assign MEM_WB_writesel_in = EX_MEM_writesel_out;
 
    always @(posedge clk, negedge rst_n)

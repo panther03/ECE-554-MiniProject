@@ -19,7 +19,7 @@ interface spart_reg_bus (input clk);
     logic [1:0] ioaddr;
     logic [7:0] databus_out;
 
-    wire [7:0] databus = (iocs_n || !srb.iorw_n) ? databus_out : 8'hZ;
+    wire [7:0] databus = (iocs_n || !iorw_n) ? databus_out : 8'hZ;
 
     task automatic spart_reg_write (input logic [1:0] addr, input logic [7:0] wdata);
         iocs_n = 0;
