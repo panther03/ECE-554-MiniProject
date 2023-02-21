@@ -1,4 +1,4 @@
 {
     "verilog.linting.verilator.arguments": "-I\"rtl/inc\"",
-    "verilog.linting.linter": "verilator"
+    "verilog.linting.linter": "modelsim"
 }
