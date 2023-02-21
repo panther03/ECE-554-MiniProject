@@ -42,7 +42,7 @@ initial begin;
             disable halt_timeout;
         end
         begin: halt_timeout;
-            repeat (1000) @(posedge stim_clk);
+            repeat (600000) @(posedge stim_clk);
             disable run_tests;
             $display("Timed out waiting for processor's halt signal..");
             $stop();

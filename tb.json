@@ -3,6 +3,10 @@
         "top": "MiniLab0_tb",
         "fw": "MiniLab0.asm"
     },
+    "MiniLab1": {
+        "top": "MiniLab1_tb",
+        "fw": "MiniLab1.asm"
+    },
     "spart": {
         "top": "spart_tb",
         "files": [
