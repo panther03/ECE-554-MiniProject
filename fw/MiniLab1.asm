@@ -1,12 +1,22 @@
-// Load Address of LED into R0
+// Load Address of SPART databuf into R0
 lbi R0, 0xC0
 slbi R0, 0x04
 
-lbi R1, 0xAA
+lbi R1, 0x48
 st R1, R0, 0x0
-lbi R1, 0x55
+lbi R1, 0x45
 st R1, R0, 0x0
-
-.FAIL:
+lbi R1, 0x4C
+st R1, R0, 0x0
+st R1, R0, 0x0
+lbi R1, 0x4F
+st R1, R0, 0x0
+lbi R1, 0x21
+st R1, R0, 0x0
+lbi R1, 0x57
+st R1, R0, 0x0
+lbi R1, 0x4F
+st R1, R0, 0x0
+.fail: 
 J .FAIL
 
