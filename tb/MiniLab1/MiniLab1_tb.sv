@@ -38,14 +38,22 @@ initial begin;
     stim_rst_n = 1;
 
     wait (iDUT.iaddr == 16'h005c);
+    repeat (50000) @(posedge stim_clk);
     send_uart_tx(stim_clk, stim_RX, 115200, 8'h4A);
+    repeat (50000) @(posedge stim_clk);
     send_uart_tx(stim_clk, stim_RX, 115200, 8'h55);
+    repeat (50000) @(posedge stim_clk);
     send_uart_tx(stim_clk, stim_RX, 115200, 8'h4C);
+    repeat (50000) @(posedge stim_clk);
     send_uart_tx(stim_clk, stim_RX, 115200, 8'h49);
+    repeat (50000) @(posedge stim_clk);
     send_uart_tx(stim_clk, stim_RX, 115200, 8'h45);
+    repeat (50000) @(posedge stim_clk);
     send_uart_tx(stim_clk, stim_RX, 115200, 8'h4E);
+    repeat (50000) @(posedge stim_clk);
     send_uart_tx(stim_clk, stim_RX, 115200, 8'h0A);
     wait(halt);
+    repeat (30000) @(posedge stim_clk);
     $display("\nYahoo!!! All Tests Passed\n");
     $finish();
 end

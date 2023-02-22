@@ -159,10 +159,10 @@ slbi R6, 0x00
 // Wait for TX buffer to clear
 JAL .WAITFORSPACETX
 
-st R1, R0, 1
+st R1, R0, 0
 ld R1, R6, 0x0
 ADDI R6, R6, 1
-BEQZ R1, .OUTPUTLOOP
+BNEZ R1, .OUTPUTLOOP
 
 halt
 
