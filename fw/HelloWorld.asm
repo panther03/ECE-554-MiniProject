@@ -2,9 +2,6 @@
 lbi R0, 0xC0
 slbi R0, 0x04
 
-// Wait for TX buffer to clear
-JAL .WAITFORSPACETX
-
 // Print Hello World (48 65 6C 6C 6F 20 57 6F 72 6C 64)
 // H
 lbi R1, 0x48
@@ -60,6 +57,14 @@ st R1, R0, 0x0
 lbi R1, 0x0A
 st R1, R0, 0x0
 
+// \r
+lbi R1, 0x0D
+st R1, R0, 0x0
+
+.PROG_START:
+// Wait for TX buffer to clear
+JAL .WAITFORSPACETX
+
 
 // Name: [4E 61 6D 65 3A 20]
 // N
@@ -69,11 +74,6 @@ st R1, R0, 0x0
 // A
 lbi R1, 0x61
 st R1, R0, 0x0
-
-
-// Wait for TX buffer to clear
-JAL .WAITFORSPACETX
-
 
 // M
 lbi R1, 0x6D
@@ -111,7 +111,7 @@ ld R1, R0, 0
 st R1, R0, 0x0
 st R1, R6, 0x0
 addi R6, R6, 0x1
-ADDI R1, R1, -10 // negative 0xA
+ADDI R1, R1, -13 // negative 0xA
 BNEZ R1, .INPUTLOOP
 
 // Null terminator
@@ -125,6 +125,9 @@ JAL .WAITFORSPACETX
 // Print Hello
 // \n
 lbi R1, 0x0A
+st R1, R0, 0x0
+
+lbi R1, 0x0D
 st R1, R0, 0x0
 
 // H
@@ -164,7 +167,13 @@ ld R1, R6, 0x0
 ADDI R6, R6, 1
 BNEZ R1, .OUTPUTLOOP
 
-halt
+lbi R1, 0x0A
+st R1, R0, 0x0
+
+lbi R1, 0x0D
+st R1, R0, 0x0
+
+j .PROG_START
 
 .WAITFORSPACETX:
 LD R3, R0, 0x1
@@ -182,5 +191,3 @@ SLLI R3, R3, 12
 SRLI R3, R3, 12
 BEQZ R3, .WAITFORRX
 JR R7, 0
-
-
