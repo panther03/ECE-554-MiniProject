@@ -5,7 +5,7 @@
     },
     "MiniLab1": {
         "top": "MiniLab1_tb",
-        "fw": "MiniLab1.asm"
+        "fw": "HelloWorld.asm"
     },
     "spart": {
         "top": "spart_tb",

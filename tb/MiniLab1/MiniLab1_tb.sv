@@ -1,7 +1,9 @@
-// To be run with fw/MiniLab1.asm
+// To be run with fw/HelloWorld.asm
 
 `timescale 1ns/100ps
 module MiniLab1_tb ();
+
+import spart_tb_tasks::*;
 
 logic stim_clk;
 logic stim_rst_n;
@@ -35,19 +37,15 @@ initial begin;
     @(negedge stim_clk);
     stim_rst_n = 1;
 
-    fork
-        begin: run_tests
-            // Wait till processor halts.
-            @(posedge halt);
-            disable halt_timeout;
-        end
-        begin: halt_timeout;
-            repeat (600000) @(posedge stim_clk);
-            disable run_tests;
-            $display("Timed out waiting for processor's halt signal..");
-            $stop();
-        end
-    join
+    wait (iDUT.iaddr == 16'h005c);
+    send_uart_tx(stim_clk, stim_RX, 115200, 8'h4A);
+    send_uart_tx(stim_clk, stim_RX, 115200, 8'h55);
+    send_uart_tx(stim_clk, stim_RX, 115200, 8'h4C);
+    send_uart_tx(stim_clk, stim_RX, 115200, 8'h49);
+    send_uart_tx(stim_clk, stim_RX, 115200, 8'h45);
+    send_uart_tx(stim_clk, stim_RX, 115200, 8'h4E);
+    send_uart_tx(stim_clk, stim_RX, 115200, 8'h0A);
+    wait(halt);
     $display("\nYahoo!!! All Tests Passed\n");
     $finish();
 end

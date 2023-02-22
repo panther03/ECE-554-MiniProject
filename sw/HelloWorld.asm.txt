@@ -1,3 +1,0 @@
-# Load "Hello World" into memroy
-
-# Send "Hello World" through UART

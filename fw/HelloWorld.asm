@@ -106,12 +106,13 @@ slbi R6, 0x00
 
 
 .INPUTLOOP:
+jal .WAITFORRX
 ld R1, R0, 0
 st R1, R0, 0x0
 st R1, R6, 0x0
 addi R6, R6, 0x1
-SUBI R1, R1, 0x0A
-BEQZ R1, .INPUTLOOP
+ADDI R1, R1, -10 // negative 0xA
+BNEZ R1, .INPUTLOOP
 
 // Null terminator
 lbi R3, 0x00
@@ -150,7 +151,6 @@ st R1, R0, 0x0
 lbi R1, 0x20
 st R1, R0, 0x0
 
-
 // Current Index of array
 lbi R6, 0x00
 slbi R6, 0x00
@@ -160,17 +160,16 @@ slbi R6, 0x00
 JAL .WAITFORSPACETX
 
 st R1, R0, 1
-ld R1, R0, 0x0
-SUBI R1, R1, 0x00
+ld R1, R6, 0x0
+ADDI R6, R6, 1
 BEQZ R1, .OUTPUTLOOP
 
-
-
+halt
 
 .WAITFORSPACETX:
 LD R3, R0, 0x1
 SRLI R3, R3, 4
-SUBI R3, R3, 8
+ADDI R3, R3, -8
 BNEZ R3, .WAITFORSPACETX
 JR R7, 0
 
@@ -178,11 +177,10 @@ JR R7, 0
 .WAITFORRX:
 LD R3, R0, 0x1
 // Clear out top 4 bits
-SLLI R3, R3, 4
-SRLI R3, R3, 4
+// since there are 8 more bits we need to do an extra 8 bits of shifting
+SLLI R3, R3, 12
+SRLI R3, R3, 12
 BEQZ R3, .WAITFORRX
 JR R7, 0
-
-
 
 
