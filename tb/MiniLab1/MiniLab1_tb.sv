@@ -52,7 +52,7 @@ initial begin;
     send_uart_tx(stim_clk, stim_RX, 115200, 8'h4E);
     repeat (5000) @(posedge stim_clk);
     send_uart_tx(stim_clk, stim_RX, 115200, 8'h0D);
-    wait (iDUT.iaddr == 16'h00a8);
+    wait (iDUT.iaddr == 16'h00DC);
     repeat (3000) @(posedge stim_clk);
     $display("\nYahoo!!! All Tests Passed\n");
     $finish();

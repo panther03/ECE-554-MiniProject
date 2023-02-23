@@ -1,7 +1,6 @@
-module MiniLab #(
-  parameter IMEM_DEPTH = 14,
-  parameter DMEM_DEPTH = 13
-) (
+module MiniLab 
+import MiniLab_defs::*;
+(
   input        clk,
   input        RST_n,
   output       halt,
@@ -45,7 +44,7 @@ reg [9:0] LEDR_r;
 
 logic spart_iocs_n;
 logic spart_iorw_n;
-logic [1:0] spart_ioaddr;
+spart_ioaddr_t spart_ioaddr;
 logic [7:0] spart_databus_in;
 
 wire [7:0] spart_databus = (spart_iocs_n || !spart_iorw_n) ? spart_databus_in : 8'hZ;
@@ -71,9 +70,7 @@ proc PROC (
 // Instruction memory //
 ///////////////////////
 
-imem #(
-  .IMEM_DEPTH(IMEM_DEPTH)
-) IMEM (
+imem IMEM (
   .clk(clk),
   // We truncate address here but this is OK. It will just fetch 0s (HALT) if out of range
   .addr_i(iaddr[IMEM_DEPTH-1:0]),
@@ -84,9 +81,7 @@ imem #(
 // Data memory //
 //////////////// 
 
-dmem #(
-  .DMEM_DEPTH(DMEM_DEPTH)
-) DMEM (
+dmem DMEM (
   .clk(clk),
   .we_i(we_dmem),
   // Also OK to truncate address, we have already checked that it's in range (otherwise we would not be enabled).
@@ -111,6 +106,16 @@ spart SPART (
     .RX(RX)                    // UART RX line
 );
 
+/////////////////////////
+// LED register logic //
+///////////////////////
+// Hold LED state until the programmer writes to address again
+always_ff @(posedge clk, negedge rst_n)
+  if (!rst_n)
+    LEDR_r <= 0;
+  else if (LEDR_en)
+    LEDR_r <= data_proc_to_mem[9:0];
+
 ///////////////////////
 // Memory map logic //
 /////////////////////
@@ -122,7 +127,7 @@ always_comb begin
   // LEDs/Switches
   LEDR_en = 0;
   // SPART
-  spart_ioaddr = 2'h0;
+  spart_ioaddr = ADDR_DBUF;
   spart_iocs_n = 1'b1;
   spart_iorw_n = 1'b1;
   spart_databus_in = 8'h0;
@@ -161,14 +166,14 @@ always_comb begin
     // SPART - Status register
     16'hC005: begin
       spart_iocs_n = ~re_map;
-      spart_ioaddr = 2'b01; // TODO replace with enumerated type
+      spart_ioaddr = ADDR_SREG; // TODO replace with enumerated type
       data_mem_to_proc_map = {8'h0, spart_databus};
     end
     // SPART - DB register
     16'hC006, 16'hC007: begin
       spart_iocs_n = ~re_map && ~we_map;
       spart_iorw_n = ~we_map;
-      spart_ioaddr = daddr[0] ? 2'b11 : 2'b10; // TODO replace with enumerated type
+      spart_ioaddr = daddr[0] ? ADDR_DBH : ADDR_DBL; 
       data_mem_to_proc_map = {8'h0, spart_databus};
       spart_databus_in = data_proc_to_mem[7:0];
     end
@@ -178,13 +183,6 @@ always_comb begin
 
   end
 end
-
-// Hold LED state until the programmer writes to address again
-always_ff @(posedge clk, negedge rst_n)
-  if (!rst_n)
-    LEDR_r <= 0;
-  else if (LEDR_en)
-    LEDR_r <= data_proc_to_mem[9:0];
 
 /////////////////////
 // Output signals //
