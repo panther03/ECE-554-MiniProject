@@ -1,6 +1,11 @@
-ASM_PROG ?= "mmioLoop.asm"
+ASM_PROG ?= "HelloWorld.asm"
 FPGA_DEV ?= "de1_soc"
 TB ?= "" # no default
+
+# trying to save you from silly capitalization mistakes
+ifneq ($(tb),)
+	TB = $(tb)
+endif
 
 FW_DIR = "fw/"
 SW_DIR = "sw/"
@@ -15,6 +20,9 @@ $(OUT_DIR):
 
 fw: $(OUT_DIR)
 	@python3 $(SW_DIR)/assemble.py $(FW_DIR)/$(ASM_PROG) -o $(OUT_DIR)/out.hex
+
+fpga_fw: $(OUT_DIR) fw
+	@make -C $(FPGA_DIR)/$(FPGA_DEV) update_mem
 
 fpga: $(OUT_DIR) fw
 	@make -C $(FPGA_DIR)/$(FPGA_DEV)
@@ -38,4 +46,11 @@ ifeq ($(TB),)
 	@python3 $(SW_DIR)/sim.py proj
 else
 	@python3 $(SW_DIR)/sim.py proj $(TB)
+endif
+
+clean:
+ifeq ($(TB),)
+	@python3 $(SW_DIR)/sim.py clean
+else
+	@python3 $(SW_DIR)/sim.py clean $(TB)
 endif

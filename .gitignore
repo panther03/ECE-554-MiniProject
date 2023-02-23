@@ -11,5 +11,6 @@ fpga/*/*
 tb/*/*
 !tb/*/*.v
 !tb/*/*.sv
+!tb/*/wave.do
 
 transcript
