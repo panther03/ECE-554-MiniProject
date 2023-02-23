@@ -12,11 +12,13 @@ logic [9:0] led_out;
 logic halt;
 
 MiniLab iDUT (
-    .CLOCK_50(stim_clk),
+    .clk(stim_clk),
     .RST_n(stim_rst_n),
     .halt(halt),
     .SW(stim_sw),
-    .LEDR(led_out)
+    .LEDR(led_out),
+    .RX(1'b1),
+    .TX()
 );
 
 initial begin;

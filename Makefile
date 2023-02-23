@@ -1,4 +1,4 @@
-ASM_PROG ?= "mmioLoop.asm"
+ASM_PROG ?= "HelloWorld.asm"
 FPGA_DEV ?= "de1_soc"
 TB ?= "" # no default
 
@@ -15,6 +15,9 @@ $(OUT_DIR):
 
 fw: $(OUT_DIR)
 	@python3 $(SW_DIR)/assemble.py $(FW_DIR)/$(ASM_PROG) -o $(OUT_DIR)/out.hex
+
+fpga_fw: $(OUT_DIR) fw
+	@make -C $(FPGA_DIR)/$(FPGA_DEV) update_mem
 
 fpga: $(OUT_DIR) fw
 	@make -C $(FPGA_DIR)/$(FPGA_DEV)

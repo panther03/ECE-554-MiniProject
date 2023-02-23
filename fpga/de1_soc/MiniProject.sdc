@@ -1,1 +1,1 @@
-create_clock -period 20.000ns [get_ports CLOCK_50]
+create_clock -period 20.000ns [get_ports clk]
