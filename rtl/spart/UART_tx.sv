@@ -42,7 +42,9 @@ always_ff @(posedge clk,negedge rst_n)
             default : tx_shift_reg <= {tx_data[7:0],1'b0}; // 10 or 11
         endcase
 
-// synchronous SR flop logic for tx_done signal
+// synchronous SR flop logic for tx_started signal
+// this is asserted once we have started the transaction so
+// the queue knows when to decrement old pointer
 always_ff @(posedge clk,negedge rst_n)
     if (!rst_n)
         tx_started <= 1'b0;
