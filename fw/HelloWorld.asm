@@ -20,7 +20,7 @@ st R1, R0, 0x0
 lbi R1, 0x4A
 st R1, R0, 0x0
 
-// move cursor to 35, 12
+// move cursor to 35, 12 so that hello world is printed in the center
 
 // ESC
 lbi R1, 0x1B
@@ -161,18 +161,23 @@ slbi R6, 0x00
 
 
 .INPUTLOOP:
+// wait for there to be a character in the queue
 jal .WAITFORRX
+// read from rx queue
 ld R1, R0, 0
+// spit it back out
 st R1, R0, 0x0
+// store it in our name array
 st R1, R6, 0x0
 addi R6, R6, 0x1
+// test if user put in a CR
 ADDI R1, R1, -13 // negative 0xD (CR)
 BNEZ R1, .INPUTLOOP
 
 // Null terminator
+// we store this so our print section knows when to end
 lbi R3, 0x00
 st R3, R6, 0x0
-
 
 // Wait for TX buffer to clear
 JAL .WAITFORSPACETX
@@ -219,10 +224,16 @@ slbi R6, 0x00
 // Wait for TX buffer to clear
 JAL .WAITFORSPACETX
 
+// R1 holds the character we are printing out
+// Read it from the array
 ld R1, R6, 0x0
+// Print it out
 st R1, R0, 0
+// increment array pointer
 ADDI R6, R6, 1
 BNEZ R1, .OUTPUTLOOP
+
+// Add a newline sequence after printing out the name
 
 // CR
 lbi R1, 0x0D
@@ -232,19 +243,24 @@ st R1, R0, 0x0
 lbi R1, 0x0A
 st R1, R0, 0x0
 
+// Start over
 j .PROG_START
 
+// This subroutine waits until the TX queue is totally empty.
 .WAITFORSPACETX:
+// load status register into r3
 LD R3, R0, 0x1
+// all this nonsense is to check if top 4 bits of r3 is 8
 SRLI R3, R3, 4
 ADDI R3, R3, -8
 BNEZ R3, .WAITFORSPACETX
 JR R7, 0
 
-
+// This subroutine waits until the RX queue has a character.
 .WAITFORRX:
 LD R3, R0, 0x1
-// Clear out top 4 bits
+// this checks that the bottom 4 bits are 0
+// we don't have an and instruction so this is to clear out the top 4 bits
 // since there are 8 more bits we need to do an extra 8 bits of shifting
 SLLI R3, R3, 12
 SRLI R3, R3, 12
