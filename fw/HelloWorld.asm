@@ -2,6 +2,64 @@
 lbi R0, 0xC0
 slbi R0, 0x04
 
+// assume queue starts out empty
+// clear screen
+// ESC
+lbi R1, 0x1B
+st R1, R0, 0x0
+
+// [
+lbi R1, 0x5B
+st R1, R0, 0x0
+
+// 2
+lbi R1, 0x32
+st R1, R0, 0x0
+
+// J
+lbi R1, 0x4A
+st R1, R0, 0x0
+
+// move cursor to 35, 12
+
+// ESC
+lbi R1, 0x1B
+st R1, R0, 0x0
+
+// [
+lbi R1, 0x5B
+st R1, R0, 0x0
+
+// Cursor Y - 1
+lbi R1, 0x31
+st R1, R0, 0x0
+
+// Cursor Y - 2
+lbi R1, 0x32
+st R1, R0, 0x0
+
+// Wait for TX buffer to clear
+JAL .WAITFORSPACETX
+
+// ;
+lbi R1, 0x3B
+st R1, R0, 0x0
+
+// Cursor X - 3
+lbi R1, 0x33
+st R1, R0, 0x0
+
+// Cursor X - 5
+lbi R1, 0x35
+st R1, R0, 0x0
+
+// H
+lbi R1, 0x66
+st R1, R0, 0x0
+
+// Wait for TX buffer to clear
+JAL .WAITFORSPACETX
+
 // Print Hello World (48 65 6C 6C 6F 20 57 6F 72 6C 64)
 // H
 lbi R1, 0x48
@@ -23,6 +81,9 @@ st R1, R0, 0x0
 lbi R1, 0x6F
 st R1, R0, 0x0
 
+// Wait for TX buffer to clear
+JAL .WAITFORSPACETX
+
 // [space]
 lbi R1, 0x20
 st R1, R0, 0x0
@@ -31,15 +92,9 @@ st R1, R0, 0x0
 lbi R1, 0x57
 st R1, R0, 0x0
 
-
-// Wait for TX buffer to clear
-JAL .WAITFORSPACETX
-
-
 // O
 lbi R1, 0x6F
 st R1, R0, 0x0
-
 
 // R
 lbi R1, 0x72
@@ -53,12 +108,12 @@ st R1, R0, 0x0
 lbi R1, 0x64
 st R1, R0, 0x0
 
-// \n
-lbi R1, 0x0A
+// CR
+lbi R1, 0x0D
 st R1, R0, 0x0
 
-// \r
-lbi R1, 0x0D
+// LF
+lbi R1, 0x0A
 st R1, R0, 0x0
 
 .PROG_START:
@@ -111,7 +166,7 @@ ld R1, R0, 0
 st R1, R0, 0x0
 st R1, R6, 0x0
 addi R6, R6, 0x1
-ADDI R1, R1, -13 // negative 0xA
+ADDI R1, R1, -13 // negative 0xD (CR)
 BNEZ R1, .INPUTLOOP
 
 // Null terminator
@@ -123,11 +178,13 @@ st R3, R6, 0x0
 JAL .WAITFORSPACETX
 
 // Print Hello
-// \n
-lbi R1, 0x0A
+
+// CR
+lbi R1, 0x0D
 st R1, R0, 0x0
 
-lbi R1, 0x0D
+// LF
+lbi R1, 0x0A
 st R1, R0, 0x0
 
 // H
@@ -167,10 +224,12 @@ st R1, R0, 0
 ADDI R6, R6, 1
 BNEZ R1, .OUTPUTLOOP
 
-lbi R1, 0x0A
+// CR
+lbi R1, 0x0D
 st R1, R0, 0x0
 
-lbi R1, 0x0D
+// LF
+lbi R1, 0x0A
 st R1, R0, 0x0
 
 j .PROG_START
