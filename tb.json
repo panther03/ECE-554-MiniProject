@@ -19,6 +19,7 @@
             "rtl/spart/queue.sv"
         ],
         "tb_pkgs": [
+            "generic_tasks",
             "spart_tb_tasks"
         ]
     }
