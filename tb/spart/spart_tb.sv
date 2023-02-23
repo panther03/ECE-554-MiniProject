@@ -11,12 +11,12 @@ localparam TX_STIM_QUEUE_SIZE = STIM_QUEUE_SIZE + 2; // +2 because we can hold o
 interface spart_reg_bus (input clk);
     logic iocs_n;
     logic iorw_n;
-    logic [1:0] ioaddr;
+    spart_ioaddr_t ioaddr;
     logic [7:0] databus_out;
 
     wire [7:0] databus = (iocs_n || !iorw_n) ? databus_out : 8'hZ;
 
-    task automatic spart_reg_write (input logic [1:0] addr, input logic [7:0] wdata);
+    task automatic spart_reg_write (input spart_ioaddr_t addr, input logic [7:0] wdata);
         iocs_n = 0;
         iorw_n = 0;
         ioaddr = addr;
@@ -26,7 +26,7 @@ interface spart_reg_bus (input clk);
         iorw_n = 1;
     endtask
 
-    task automatic spart_reg_read (input logic [1:0] addr, output logic [7:0] rdata);
+    task automatic spart_reg_read (input spart_ioaddr_t addr, output logic [7:0] rdata);
         iocs_n = 0;
         iorw_n = 1;
         ioaddr = addr;
@@ -65,7 +65,7 @@ spart iDUT (
 // This value stores the value we got from a register read on the SPART bus.
 reg [7:0] srb_reg_temp;
 // store the whole databuffer so we can also have high & low
-reg [16:0] db_temp;
+reg [15:0] db_temp;
 
 reg [7:0] uart_rx_temp;
 reg new_uart_rx_data;
@@ -85,6 +85,9 @@ integer rx_empty_fifo_ind;
 integer tx_fifo_ind;
 integer rx_fifo_ind;
 
+// the current baud rate
+integer    baud_temp;
+
 initial begin;
     // Initialize signals
     clk = 0;
@@ -94,7 +97,9 @@ initial begin;
     srb.databus_out = 8'h0;
     srb.iocs_n = 1;
     srb.iorw_n = 1;
-    srb.ioaddr = 2'h0;
+    srb.ioaddr = ADDR_DBUF;
+
+    baud_temp = 0;
 
     tx_fifo_ind = 0;
     rx_fifo_ind = 0;
@@ -140,7 +145,8 @@ initial begin;
     // Test 3: Verify we can write to DB register //
     ///////////////////////////////////////////////
     // Set baud rate to 19200
-    db_temp = calculate_baud(19200);
+    baud_temp = 19200;
+    db_temp = calculate_baud(baud_temp);
     srb.spart_reg_write(ADDR_DBH, db_temp[15:8]);
     srb.spart_reg_write(ADDR_DBL, db_temp[7:0]);
     db_temp = 0;
@@ -148,11 +154,34 @@ initial begin;
     // Check new baud rate
     srb.spart_reg_read(ADDR_DBH, db_temp[15:8]);
     srb.spart_reg_read(ADDR_DBL, db_temp[7:0]);
-    assert_msg(calculate_baud(19200) == db_temp[12:0], "Baud rate set to 19200");
+    assert_msg(calculate_baud(baud_temp) == db_temp[12:0], "Baud rate set to 19200");
+
+    /////////////////////////////////////////////
+    // Test 4: Basic read/write at 19200 baud //
+    ///////////////////////////////////////////
+    srb.spart_reg_write(ADDR_DBUF, 8'hAA);
+    fork
+        begin
+            wait(new_uart_rx_data);
+            new_uart_rx_data = 0;
+            assert_msg(uart_rx_temp == 8'hAA, "Transmitted TX data matches queue data");
+        end
+        begin
+            send_uart_tx(clk, spart_rx, baud_temp, 8'h55);
+            srb.spart_reg_read(ADDR_DBUF, srb_reg_temp);
+            assert_msg(srb_reg_temp == 8'h55, "Received RX data matches queue data");
+        end
+    join    
 
     ///////////////////////////////////////
     // Test 4: Interleaved reads/writes //
     /////////////////////////////////////
+    // First set a new baud rate
+    baud_temp = 921600;
+    db_temp = calculate_baud(baud_temp);
+    srb.spart_reg_write(ADDR_DBH, db_temp[15:8]);
+    srb.spart_reg_write(ADDR_DBL, db_temp[7:0]);
+
     fork
         begin: FILL_TX_FIFO
             for (tx_fill_fifo_ind = 0; tx_fill_fifo_ind <= QUEUE_SIZE; tx_fill_fifo_ind++) begin
@@ -195,9 +224,9 @@ initial begin;
             end
         end
         begin: WRITE_RX_TO_SPART
-            repeat (100) @(posedge clk); // delay a little to avoid reg reads colliding
+            repeat (30) @(posedge clk); // delay a little to avoid reg reads colliding
             for (rx_fifo_ind = 0; rx_fifo_ind < STIM_QUEUE_SIZE; rx_fifo_ind++) begin
-                send_uart_tx(clk, spart_rx, 19200, rx_fifo_stim[rx_fifo_ind]);
+                send_uart_tx(clk, spart_rx, 921600, rx_fifo_stim[rx_fifo_ind]);
                 srb.spart_reg_read(ADDR_SREG, srb_reg_temp);
                 if (rx_fifo_ind < QUEUE_SIZE >> 1) begin
                     assert_msg(srb_reg_temp[3:0] == rx_fifo_ind+1, "Status register (RX) tracks after sending UART data");
@@ -248,7 +277,7 @@ end
 // Wait for RX to go low (start bit)
 always @(negedge spart_tx) begin
     $display("Starting a receive at %t..", $time);
-    recv_uart_rx(clk, spart_tx, 19200, uart_rx_temp);
+    recv_uart_rx(clk, spart_tx, baud_temp, uart_rx_temp);
     new_uart_rx_data = 1;
 end
 
