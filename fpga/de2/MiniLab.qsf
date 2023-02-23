@@ -122,6 +122,7 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name SDC_FILE MiniLab.sdc
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/pkg/MiniLab_defs.sv
 set_global_assignment -name VERILOG_FILE ../../rtl/cpu/shifter.v
 set_global_assignment -name VERILOG_FILE ../../rtl/cpu/rf.v
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/proc.sv
@@ -136,10 +137,10 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/rst_synch.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/MiniLab.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/mem/imem.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/mem/dmem.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/queue.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/spart.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/UART_tx.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/UART_rx.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/spart/queue.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/spart/spart.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/spart/UART_tx.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/spart/UART_rx.sv
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name ENABLE_SIGNALTAP ON

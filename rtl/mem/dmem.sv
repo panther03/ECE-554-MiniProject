@@ -1,5 +1,5 @@
 module dmem
-import MiniLab_defs::*;
+import MiniLab_defs::DMEM_DEPTH;
 (
    input                   clk,
    input                   we_i,

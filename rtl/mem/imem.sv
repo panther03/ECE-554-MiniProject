@@ -1,5 +1,5 @@
 module imem 
-import MiniLab_defs::*;
+import MiniLab_defs::IMEM_DEPTH;
 (
    input                   clk,
    input  [IMEM_DEPTH-1:0] addr_i,
