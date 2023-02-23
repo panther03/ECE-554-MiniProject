@@ -2,6 +2,11 @@ ASM_PROG ?= "HelloWorld.asm"
 FPGA_DEV ?= "de1_soc"
 TB ?= "" # no default
 
+# trying to save you from silly capitalization mistakes
+ifneq ($(tb),)
+	TB = $(tb)
+endif
+
 FW_DIR = "fw/"
 SW_DIR = "sw/"
 FPGA_DIR = "fpga/"
@@ -41,4 +46,11 @@ ifeq ($(TB),)
 	@python3 $(SW_DIR)/sim.py proj
 else
 	@python3 $(SW_DIR)/sim.py proj $(TB)
+endif
+
+clean:
+ifeq ($(TB),)
+	@python3 $(SW_DIR)/sim.py clean
+else
+	@python3 $(SW_DIR)/sim.py clean $(TB)
 endif

@@ -1,13 +1,8 @@
 `timescale 1ns/100ps
 module spart_tb ();
 
+import MiniLab_defs::*;
 import spart_tb_tasks::*;
-
-// TODO move these to a package in the RTL. we should agree on what the addresses are
-localparam ADDR_DBUF = 2'b00;
-localparam ADDR_SREG = 2'b01;
-localparam ADDR_DBL  = 2'b10;
-localparam ADDR_DBH  = 2'b11;
 
 localparam QUEUE_SIZE = 8;
 localparam STIM_QUEUE_SIZE = QUEUE_SIZE + (QUEUE_SIZE >> 1);

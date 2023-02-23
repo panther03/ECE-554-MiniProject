@@ -1,6 +1,6 @@
-module dmem #(
-   parameter DMEM_DEPTH = 1
-) (
+module dmem
+import MiniLab_defs::*;
+(
    input                   clk,
    input                   we_i,
    input  [DMEM_DEPTH-1:0] addr_i,

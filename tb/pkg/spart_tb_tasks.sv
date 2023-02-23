@@ -37,18 +37,6 @@ package spart_tb_tasks;
         int baud_wait = calculate_baud(baud_int) + 1;
         int baud_wait_half = (baud_wait >> 1);
         $display("baud (full/half): %d/%d", baud_wait, baud_wait_half);
-        // Just to wait for the start bit
-        //fork
-        //    begin: wait_for_rx_negedge;
-        //        @(negedge RX);
-        //        disable rx_negedge_timeout;
-        //    end
-        //    begin: rx_negedge_timeout
-        //        repeat (RX_WAIT) @(posedge clk);
-        //        $display("ERR: RX never went low (start bit).");
-        //        $stop();
-        //    end
-        //join
 
         $display("rx start %t", $time);
         // Advance to halfway through the transaction

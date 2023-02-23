@@ -1,6 +1,6 @@
-module imem #(
-   parameter IMEM_DEPTH = 1
-) (
+module imem 
+import MiniLab_defs::*;
+(
    input                   clk,
    input  [IMEM_DEPTH-1:0] addr_i,
    output [15:0]           inst_o

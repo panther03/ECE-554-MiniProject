@@ -1,7 +1,6 @@
-module MiniLab #(
-  parameter IMEM_DEPTH = 14,
-  parameter DMEM_DEPTH = 13
-) (
+module MiniLab 
+import MiniLab_defs::*;
+(
   input        clk,
   input        RST_n,
   output       halt,
@@ -71,9 +70,7 @@ proc PROC (
 // Instruction memory //
 ///////////////////////
 
-imem #(
-  .IMEM_DEPTH(IMEM_DEPTH)
-) IMEM (
+imem IMEM (
   .clk(clk),
   // We truncate address here but this is OK. It will just fetch 0s (HALT) if out of range
   .addr_i(iaddr[IMEM_DEPTH-1:0]),
@@ -84,9 +81,7 @@ imem #(
 // Data memory //
 //////////////// 
 
-dmem #(
-  .DMEM_DEPTH(DMEM_DEPTH)
-) DMEM (
+dmem DMEM (
   .clk(clk),
   .we_i(we_dmem),
   // Also OK to truncate address, we have already checked that it's in range (otherwise we would not be enabled).

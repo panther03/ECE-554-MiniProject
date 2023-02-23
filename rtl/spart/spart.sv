@@ -16,23 +16,25 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
-module spart(
-    input clk,				// 50MHz clk
-    input rst_n,			// asynch active low reset
-    input iocs_n,			// active low chip select (decode address range)
-    input iorw_n,			// high for read, low for write
-    output tx_q_full,		// indicates transmit queue is full
-    output rx_q_empty,		// indicates receive queue is empty
-    input [1:0] ioaddr,		// Read/write 1 of 4 internal 8-bit registers
-    inout [7:0] databus,	// bi-directional data bus
-    output TX,				// UART TX line
-    input RX				// UART RX line
-    );
+module spart
+import MiniLab_defs::*;
+(
+    input clk,				      // 50MHz clk
+    input rst_n,			      // asynch active low reset
+    input iocs_n,			      // active low chip select (decode address range)
+    input iorw_n,			      // high for read, low for write
+    output tx_q_full,		      // indicates transmit queue is full
+    output rx_q_empty,		      // indicates receive queue is empty
+    input spart_ioaddr_t ioaddr,  // Read/write 1 of 4 internal 8-bit registers
+    inout [7:0] databus,	      // bi-directional data bus
+    output TX,				      // UART TX line
+    input RX				      // UART RX line
+);
 
-    wire databuffer_reg_write = ~iocs_n && ioaddr == 2'b00 && ~iorw_n;
-    wire databuffer_reg_read  = ~iocs_n && ioaddr == 2'b00 && iorw_n;
-    wire divbuffer_l_reg_read = ~iocs_n && ioaddr == 2'b10 && ~iorw_n;
-    wire divbuffer_h_reg_read = ~iocs_n && ioaddr == 2'b11 && ~iorw_n;
+    wire databuffer_reg_write = ~iocs_n && ioaddr == ADDR_DBUF && ~iorw_n;
+    wire databuffer_reg_read  = ~iocs_n && ioaddr == ADDR_DBUF && iorw_n;
+    wire divbuffer_l_reg_read = ~iocs_n && ioaddr == ADDR_DBL && ~iorw_n;
+    wire divbuffer_h_reg_read = ~iocs_n && ioaddr == ADDR_DBH && ~iorw_n;
 
     wire tx_q_empty_n;
     wire rx_q_full_n;
@@ -142,9 +144,9 @@ module spart(
 
     always_comb
         case (ioaddr)
-            2'b00: databus_out = rx_queue_out; 
-            2'b10: databus_out = DB[7:0];
-            2'b11: databus_out = {3'h0, DB[12:8]};
+            ADDR_DBUF: databus_out = rx_queue_out; 
+            ADDR_DBL: databus_out = DB[7:0];
+            ADDR_DBH: databus_out = {3'h0, DB[12:8]};
             default: databus_out = status_reg; // 2'b01 (status reg)
         endcase 
 
