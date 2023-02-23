@@ -84,7 +84,7 @@ set_location_assignment PIN_AD23 -to LEDR[5]
 set_location_assignment PIN_AD21 -to LEDR[6]
 set_location_assignment PIN_AC21 -to LEDR[7]
 set_location_assignment PIN_AA14 -to LEDR[8]
-set_location_assignment PIN_Y13  -to LEDR[9]
+set_location_assignment PIN_Y13 -to LEDR[9]
 
 #============================================================
 # SW
@@ -99,16 +99,16 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[6]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[7]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[8]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW[9]
-set_location_assignment PIN_N25 -to  SW[0]
-set_location_assignment PIN_N26 -to  SW[1]
-set_location_assignment PIN_P25 -to  SW[2]
+set_location_assignment PIN_N25 -to SW[0]
+set_location_assignment PIN_N26 -to SW[1]
+set_location_assignment PIN_P25 -to SW[2]
 set_location_assignment PIN_AE14 -to SW[3]
 set_location_assignment PIN_AF14 -to SW[4]
 set_location_assignment PIN_AD13 -to SW[5]
 set_location_assignment PIN_AC13 -to SW[6]
-set_location_assignment PIN_C13 -to  SW[7]
-set_location_assignment PIN_B13 -to  SW[8]
-set_location_assignment PIN_A13 -to  SW[9]
+set_location_assignment PIN_C13 -to SW[7]
+set_location_assignment PIN_B13 -to SW[8]
+set_location_assignment PIN_A13 -to SW[9]
 
 #============================================================
 # UART
@@ -117,8 +117,6 @@ set_location_assignment PIN_C25 -to RX
 set_location_assignment PIN_B25 -to TX
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to RX
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to TX
-set_location_assignment PIN_W25 -to RX_copy
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to RX_copy
 
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
