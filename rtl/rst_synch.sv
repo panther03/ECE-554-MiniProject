@@ -1,6 +1,7 @@
 module rst_synch (
     input clk,
     input RST_n_i,
+    input PLL_locked_i,
     output rst_n_o
 );
 
@@ -11,7 +12,7 @@ always_ff @(negedge clk, negedge RST_n_i)
         RST_n_ff1 <= 0;
         RST_n_ff2 <= 0;
     end else begin
-        RST_n_ff1 <= 1'b1;
+        RST_n_ff1 <= PLL_locked_i;
         RST_n_ff2 <= RST_n_ff1;
     end
 

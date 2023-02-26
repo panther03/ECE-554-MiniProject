@@ -1,7 +1,7 @@
 module MiniLab 
 import MiniLab_defs::*;
 (
-  input        clk,
+  input        REF_CLK,
   input        RST_n,
   output       halt,
   // Peripherals
@@ -11,13 +11,41 @@ import MiniLab_defs::*;
   // UART
   input        RX,
   output       TX
+  // VGA
+  output    	 VGA_BLANK_N,
+	output [7:0] VGA_B,
+	output       VGA_CLK,
+	output [7:0] VGA_G,
+	output       VGA_HS,
+	output [7:0] VGA_R,
+	output       VGA_SYNC_N,
+	output       VGA_VS
 );
 
+// system clock from PLL
+wire clk;
+
+////////////////////////////////////////////
+// instantiate pll for sys clk & VGA clk //
+//////////////////////////////////////////
+wire pll_locked;
+PLL iPLL(
+  .refclk(REF_CLK),
+  .rst(~RST_n),
+  .outclk_0(clk),
+  .outclk_1(VGA_CLK),
+  .locked(pll_locked)
+);
+
+/////////////////////////
+// reset synchronizer //
+///////////////////////
 // This is the synchronized reset we will feed to the rest of our FPGA
 wire rst_n;
 rst_synch RST (
   .clk(clk),
   .RST_n_i(RST_n),
+  .PLL_locked_i(pll_locked),
   .rst_n_o(rst_n)
 );
 
@@ -89,6 +117,8 @@ dmem DMEM (
   .wdata_i(data_proc_to_mem),
   .rdata_o(data_mem_to_proc_dmem)
 );
+
+// TODO: instantiate BMP display logic here
 
 ////////////////////////
 // Instantiate SPART //
@@ -177,6 +207,7 @@ always_comb begin
       data_mem_to_proc_map = {8'h0, spart_databus};
       spart_databus_in = data_proc_to_mem[7:0];
     end
+    // TODO: Add memory mapped logic in this case statement
     // There is no default because all of our inputs
     // are defaulted. It would be the same thing.
   endcase
