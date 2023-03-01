@@ -5,19 +5,46 @@
 
 module BMP_display(
   // TODO: fill this in with interface to the rest of the processor
+  input clk,
+  input rst_n,
+  input [9:0] x_pos,
+  input x_we,
+  input [8:0] y_pos,
+  input y_we,
+  input [7:0] cmd_in,
+  input cmd_we,
+  output status
+  // TODO add VGA signals back
 );
+
+  reg [9:0] x_pos_r;
+  always_ff @(posedge clk, negedge rst_n) begin
+    if (!rst_n)
+      x_pos_r <= 0;
+    else if (x_we)
+      x_pos_r <= x_pos;
+    else
+      x_pos_r <= x_pos_r;
+  end
+
+  reg [8:0] y_pos_r;
+  always_ff @(posedge clk, negedge rst_n) begin
+    if (!rst_n)
+      y_pos_r <= 0;
+    else if (y_we)
+      y_pos_r <= y_pos;
+    else
+      y_pos_r <= y_pos_r;
+  end
 
   ////////////////////////////////////
   // internal nets for connections //
   //////////////////////////////////
-  wire [9:0] xpix;					// current X coordinate of VGA
-  wire [8:0] ypix;					// current Y coordinate of VGA
   wire [18:0] raddr;				// address into videoMem for reads
   wire [8:0] rdata;					// 9-bit color
   wire [18:0] waddr;				// write address to videoMem
   wire [8:0] wdata;					// write data to videoMem
   wire [4:0] image_indx;
-  wire [9:0] xloc;
   wire we;
   wire add_img,add_fnt;
   wire [5:0] fnt_indx;
@@ -28,8 +55,7 @@ module BMP_display(
   // Instantiate VGA Timing Generator //
   /////////////////////////////////////
   VGA_timing iVGATM(.clk25MHz(VGA_CLK), .rst_n(rst_n), .VGA_BLANK_N(VGA_BLANK_N),
-                    .VGA_HS(VGA_HS),.VGA_SYNC_N(VGA_SYNC_N), .VGA_VS(VGA_VS), 
-					.xpix(xpix), .ypix(ypix), .addr_lead(raddr));
+                    .VGA_HS(VGA_HS),.VGA_SYNC_N(VGA_SYNC_N), .VGA_VS(VGA_VS), .addr_lead(raddr));
 					
   /////////////////////////////////////
   // Instantiate 9-bit video memory //
