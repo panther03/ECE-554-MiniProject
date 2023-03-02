@@ -36,7 +36,7 @@ JAL .WAITFORDRAWREADY
 
 // 'V' - X_POS
 lbi R2, 0x01
-slbi R2, 0x11A
+slbi R2, 0x1A
 st R2, R0, 0x0
 
 // 'V' - write
@@ -102,7 +102,7 @@ lbi R2, 0x09
 st R2, R0, 0x2
 
 // finished, busy wait now
-.BUSYWAIT
+.BUSYWAIT:
 J .BUSYWAIT
 
 // This subroutine waits until the TX queue is totally empty.
