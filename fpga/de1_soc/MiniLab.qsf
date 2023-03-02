@@ -183,6 +183,7 @@ set_location_assignment PIN_D11 -to VGA_VS
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name VERILOG_FILE "/shared/WISC/ECE554/ECE-554-MiniProject/rtl/bmp_display/BMP_ROM_Walter.v"
 set_global_assignment -name SDC_FILE MiniProject.sdc
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/pkg/MiniLab_defs.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/mem/imem.sv
