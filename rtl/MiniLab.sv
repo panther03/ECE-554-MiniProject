@@ -23,7 +23,7 @@ import MiniLab_defs::*;
 );
 
 // system clock from PLL
-wire clk = REF_CLK;
+wire clk;// = REF_CLK;
 
 ////////////////////////////////////////////
 // instantiate pll for sys clk & VGA clk //
@@ -84,6 +84,7 @@ logic x_we, y_we, cmd_we;
 logic [9:0] x_pos;
 logic [8:0] y_pos;
 logic [7:0] cmd;
+logic idle;
 
 
 ///////////////////////////////
@@ -158,7 +159,6 @@ BMP_display BMP (
   .cmd_in(cmd),
   .cmd_we(cmd_we),
   .VGA_CLK(VGA_CLK),
-  .status(status),
   .VGA_BLANK_N(VGA_BLANK_N),
   .VGA_HS(VGA_HS),
   .VGA_SYNC_N(VGA_SYNC_N),

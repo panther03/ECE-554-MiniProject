@@ -3,8 +3,8 @@ package MiniLab_defs;
     /////////////
     // MEMORY //
     ///////////
-    localparam IMEM_DEPTH = 14;
-    localparam DMEM_DEPTH = 13;
+    localparam IMEM_DEPTH = 12;
+    localparam DMEM_DEPTH = 11;
 
     ////////////
     // SPART //

@@ -14,8 +14,6 @@ module BMP_display(
   input [7:0] cmd_in,
   input cmd_we,
   input VGA_CLK,
-  
-  output status,
   output VGA_BLANK_N,
   output VGA_HS,
   output VGA_SYNC_N,
@@ -93,8 +91,8 @@ module BMP_display(
   assign fnt_indx = cmd_in[7:2];
   assign image_indx = cmd_in[6:2];
   
-  assign xloc = x_pos;
-  assign yloc = y_pos; 
+  assign xloc = x_pos_r;
+  assign yloc = y_pos_r; 
 	
  endmodule
   ///////////////////////////////////////////////
