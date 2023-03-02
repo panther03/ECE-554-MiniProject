@@ -27,7 +27,7 @@ module BMP_display(
 );
 
   reg [9:0] x_pos_r;
-  always_ff @(posedge clk, negedge rst_n) begin
+  always @(posedge clk, negedge rst_n) begin
     if (!rst_n)
       x_pos_r <= 0;
     else if (x_we)
@@ -37,7 +37,7 @@ module BMP_display(
   end
 
   reg [8:0] y_pos_r;
-  always_ff @(posedge clk, negedge rst_n) begin
+  always @(posedge clk, negedge rst_n) begin
     if (!rst_n)
       y_pos_r <= 0;
     else if (y_we)
@@ -71,7 +71,7 @@ module BMP_display(
   /////////////////////////////////////
   // Instantiate 9-bit video memory //
   ///////////////////////////////////
-  videoMem(.clk(clk),.we(we),.waddr(waddr),.wdata(wdata),.raddr(raddr),.rdata(rdata));
+  videoMem iVIDMEM(.clk(clk),.we(we),.waddr(waddr),.wdata(wdata),.raddr(raddr),.rdata(rdata));
   
   assign VGA_R = {rdata[8:6],5'b00000};
   assign VGA_G = {rdata[5:3],5'b00000};
@@ -81,7 +81,7 @@ module BMP_display(
   // Instantiate Logic that determines pixel //
   // colors based on BMP placement          //
   ///////////////////////////////////////////					
-  PlaceBMP(.clk(clk),.rst_n(rst_n),.add_fnt(add_fnt),.fnt_indx(fnt_indx),
+  PlaceBMP iPLCBMP(.clk(clk),.rst_n(rst_n),.add_fnt(add_fnt),.fnt_indx(fnt_indx),
            .add_img(add_img),.rem_img(1'b0),.image_indx(image_indx),
            .xloc(xloc),.yloc(yloc),.waddr(waddr),.wdata(wdata),.we(we),.idle(idle));
 

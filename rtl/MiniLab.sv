@@ -10,7 +10,7 @@ import MiniLab_defs::*;
   output [9:0] LEDR,
   // UART
   input        RX,
-  output       TX
+  output       TX,
   // VGA
   output    	 VGA_BLANK_N,
   output [7:0] VGA_B,
@@ -23,7 +23,7 @@ import MiniLab_defs::*;
 );
 
 // system clock from PLL
-wire clk;
+wire clk = REF_CLK;
 
 ////////////////////////////////////////////
 // instantiate pll for sys clk & VGA clk //
@@ -80,9 +80,7 @@ wire [7:0] spart_databus = (spart_iocs_n || !spart_iorw_n) ? spart_databus_in : 
 //////////////////
 // BMP signals //
 ////////// /////
-logic x_en, x_we;
-logic y_en, y_we;
-logic cmd_en, cmd_we;
+logic x_we, y_we, cmd_we;
 logic [9:0] x_pos;
 logic [8:0] y_pos;
 logic [7:0] cmd;
@@ -185,23 +183,11 @@ always_ff @(posedge clk, negedge rst_n)
 // BMT register logic //
 ///////////////////////
 // Hold xpos/ypos/cmd state until the programmer writes to address again
-always_ff @(posedge clk, negedge rst_n)
-  if (!rst_n)
-    x_pos <= 0;
-  else if (x_en)
-    x_pos <= data_proc_to_mem[9:0];
+assign x_pos = data_proc_to_mem[9:0];
 	
-always_ff @(posedge clk, negedge rst_n)
-  if (!rst_n)
-    y_pos <= 0;
-  else if (y_en)
-    y_pos <= data_proc_to_mem[8:0];
+assign y_pos = data_proc_to_mem[8:0];
 	
-always_ff @(posedge clk, negedge rst_n)
-  if (!rst_n)
-    cmd <= 0;
-  else if (cmd_en)
-    cmd <= data_proc_to_mem[7:0];
+assign cmd = data_proc_to_mem[7:0];
 
 ///////////////////////
 // Memory map logic //
@@ -221,9 +207,6 @@ always_comb begin
   // BMP
   x_we = 1'b0;
   y_we = 1'b0;
-  x_en = 1'b0;
-  y_en = 1'b0;
-  cmd_en = 1'b0;
   cmd_we = 1'b0;
 
   // Data back to processor.
@@ -273,18 +256,15 @@ always_comb begin
     end
 	// BMP - X pos
 	16'hC008: begin
-	  x_we = 1'b1;
-      x_en = 1;
+	  x_we = we_map;
 	end
 	// BMP - Y pos
 	16'hC009: begin
-	  y_we = 1'b1;
-	  y_en = 1;
+	  y_we = we_map;
 	end
 	// BMP - cmd
 	16'hC00A: begin
-	  cmd_en;
-	  cmd_we;
+	  cmd_we = we_map;
 	end
 	// BMP - status reg
 	16'hC00B: begin

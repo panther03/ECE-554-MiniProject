@@ -1,5 +1,5 @@
 module PlaceBMP(clk,rst_n,add_fnt,fnt_indx,add_img,rem_img,image_indx,
-                xloc,yloc,waddr,wdata,we);
+                xloc,yloc,waddr,wdata,we,idle);
 
   
   input clk,rst_n;
