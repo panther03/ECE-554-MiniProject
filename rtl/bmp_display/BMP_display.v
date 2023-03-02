@@ -13,8 +13,17 @@ module BMP_display(
   input y_we,
   input [7:0] cmd_in,
   input cmd_we,
-  output status
-  // TODO add VGA signals back
+  input VGA_CLK,
+  
+  output status,
+  output VGA_BLANK_N,
+  output VGA_HS,
+  output VGA_SYNC_N,
+  output VGA_VS,
+  output [7:0] VGA_R,
+  output [7:0] VGA_G,
+  output [7:0] VGA_B,
+  output idle
 );
 
   reg [9:0] x_pos_r;
@@ -48,6 +57,8 @@ module BMP_display(
   wire we;
   wire add_img,add_fnt;
   wire [5:0] fnt_indx;
+  wire [9:0] xloc;
+  wire [8:0] yloc;
   
   reg [18:0] count;					// generate a pulse on add_img
  
@@ -72,8 +83,20 @@ module BMP_display(
   ///////////////////////////////////////////					
   PlaceBMP(.clk(clk),.rst_n(rst_n),.add_fnt(add_fnt),.fnt_indx(fnt_indx),
            .add_img(add_img),.rem_img(1'b0),.image_indx(image_indx),
-           .xloc(xloc),.yloc(9'h50),.waddr(waddr),.wdata(wdata),.we(we));
+           .xloc(xloc),.yloc(yloc),.waddr(waddr),.wdata(wdata),.we(we),.idle(idle));
 
+  // add fnt or image
+  assign add_fnt = cmd_we && ~|cmd_in[1:0];
+  assign add_img = cmd_we && cmd_in[1:0] == 2'b01;
+  
+  // index of bmp
+  assign fnt_indx = cmd_in[7:2];
+  assign image_indx = cmd_in[6:2];
+  
+  assign xloc = x_pos;
+  assign yloc = y_pos; 
+	
+ endmodule
   ///////////////////////////////////////////////
   // What follows is a super cheese ball method
   // of writing a few characters and images
@@ -82,7 +105,7 @@ module BMP_display(
   // to the databus of your processor and using
   // your processor code to write images and characters
   ///////////////////////////////////////////////
-  always @(posedge clk, negedge rst_n)
+  /*always @(posedge clk, negedge rst_n)
     if (!rst_n)
 	  count <= 19'h00000;
 	else if (~&count)
@@ -105,13 +128,11 @@ module BMP_display(
 				   1'b0;
 				   
   assign add_img = ((count==19'h07000) || (count==19'h7FFFE)) ? 1'b1 : 1'b0;
-  assign image_indx = (count[18]) ? 5'h02 : 5'h01;
+  assign image_indx = (count[18]) ? 5'h02 : 5'h01; 0 0010 01| 0 0001 01
   assign xloc = (count==19'h00005) ? 10'd256 :
                 (count==19'h01005) ? 10'd269 :
 				(count==19'h02005) ? 10'd282 :
 				(count==19'h03005) ? 10'd295 :
 				(count==19'h04005) ? 10'd308 :
 				(count==19'h05005) ? 10'd321 :
-                (count[18]) ? 10'h180 : 10'h40;
-	
- endmodule
+                (count[18]) ? 10'h180 : 10'h40;*/

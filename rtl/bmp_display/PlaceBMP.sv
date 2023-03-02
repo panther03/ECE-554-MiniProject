@@ -14,6 +14,7 @@ module PlaceBMP(clk,rst_n,add_fnt,fnt_indx,add_img,rem_img,image_indx,
   output reg [18:0] waddr;		// write address to videoMem
   output logic [8:0] wdata;		// write 9-bit pixel to videoMem
   output reg we;
+  output logic idle;
   
   //////////////////////////////////////////
   // Declare any internal registers next //
@@ -158,6 +159,7 @@ module PlaceBMP(clk,rst_n,add_fnt,fnt_indx,add_img,rem_img,image_indx,
 	fnt_addr_inc = 0;
 	we = 0;
 	wdata = 9'hxxx;
+	idle = 1'b0;
 
 	case (state)
 	  IDLE: begin
@@ -168,6 +170,7 @@ module PlaceBMP(clk,rst_n,add_fnt,fnt_indx,add_img,rem_img,image_indx,
 		  captureIndx = 1;
 		  nxt_state = ADV2;
 		end
+		idle = 1'b1;
 	  end
 	  ADV1: begin	// this state is about advancing bmp_address
 	    bmp_addr_inc = 1;

@@ -13,13 +13,13 @@ import MiniLab_defs::*;
   output       TX
   // VGA
   output    	 VGA_BLANK_N,
-	output [7:0] VGA_B,
-	output       VGA_CLK,
-	output [7:0] VGA_G,
-	output       VGA_HS,
-	output [7:0] VGA_R,
-	output       VGA_SYNC_N,
-	output       VGA_VS
+  output [7:0] VGA_B,
+  output       VGA_CLK,
+  output [7:0] VGA_G,
+  output       VGA_HS,
+  output [7:0] VGA_R,
+  output       VGA_SYNC_N,
+  output       VGA_VS
 );
 
 // system clock from PLL
@@ -76,6 +76,17 @@ spart_ioaddr_t spart_ioaddr;
 logic [7:0] spart_databus_in;
 
 wire [7:0] spart_databus = (spart_iocs_n || !spart_iorw_n) ? spart_databus_in : 8'hZ;
+
+//////////////////
+// BMP signals //
+////////// /////
+logic x_en, x_we;
+logic y_en, y_we;
+logic cmd_en, cmd_we;
+logic [9:0] x_pos;
+logic [8:0] y_pos;
+logic [7:0] cmd;
+
 
 ///////////////////////////////
 // Processor instantiation //
@@ -136,6 +147,30 @@ spart SPART (
     .RX(RX)                    // UART RX line
 );
 
+//////////////////////
+// Instantiate BMP //
+////////////////////
+BMP_display BMP (
+  .clk(clk),
+  .rst_n(rst_n),
+  .x_pos(x_pos),
+  .x_we(x_we),
+  .y_pos(y_pos),
+  .y_we(y_we),
+  .cmd_in(cmd),
+  .cmd_we(cmd_we),
+  .VGA_CLK(VGA_CLK),
+  .status(status),
+  .VGA_BLANK_N(VGA_BLANK_N),
+  .VGA_HS(VGA_HS),
+  .VGA_SYNC_N(VGA_SYNC_N),
+  .VGA_VS(VGA_VS),
+  .VGA_R(VGA_R),
+  .VGA_G(VGA_G),
+  .VGA_B(VGA_B),
+  .idle(idle)
+);
+
 /////////////////////////
 // LED register logic //
 ///////////////////////
@@ -145,6 +180,28 @@ always_ff @(posedge clk, negedge rst_n)
     LEDR_r <= 0;
   else if (LEDR_en)
     LEDR_r <= data_proc_to_mem[9:0];
+	
+/////////////////////////
+// BMT register logic //
+///////////////////////
+// Hold xpos/ypos/cmd state until the programmer writes to address again
+always_ff @(posedge clk, negedge rst_n)
+  if (!rst_n)
+    x_pos <= 0;
+  else if (x_en)
+    x_pos <= data_proc_to_mem[9:0];
+	
+always_ff @(posedge clk, negedge rst_n)
+  if (!rst_n)
+    y_pos <= 0;
+  else if (y_en)
+    y_pos <= data_proc_to_mem[8:0];
+	
+always_ff @(posedge clk, negedge rst_n)
+  if (!rst_n)
+    cmd <= 0;
+  else if (cmd_en)
+    cmd <= data_proc_to_mem[7:0];
 
 ///////////////////////
 // Memory map logic //
@@ -161,6 +218,13 @@ always_comb begin
   spart_iocs_n = 1'b1;
   spart_iorw_n = 1'b1;
   spart_databus_in = 8'h0;
+  // BMP
+  x_we = 1'b0;
+  y_we = 1'b0;
+  x_en = 1'b0;
+  y_en = 1'b0;
+  cmd_en = 1'b0;
+  cmd_we = 1'b0;
 
   // Data back to processor.
   data_mem_to_proc_map = 8'h0;
@@ -207,6 +271,25 @@ always_comb begin
       data_mem_to_proc_map = {8'h0, spart_databus};
       spart_databus_in = data_proc_to_mem[7:0];
     end
+	// BMP - X pos
+	16'hC008: begin
+	  x_we = 1'b1;
+      x_en = 1;
+	end
+	// BMP - Y pos
+	16'hC009: begin
+	  y_we = 1'b1;
+	  y_en = 1;
+	end
+	// BMP - cmd
+	16'hC00A: begin
+	  cmd_en;
+	  cmd_we;
+	end
+	// BMP - status reg
+	16'hC00B: begin
+	  data_mem_to_proc_map = {15'h00 , idle};
+	end
     // TODO: Add memory mapped logic in this case statement
     // There is no default because all of our inputs
     // are defaulted. It would be the same thing.
